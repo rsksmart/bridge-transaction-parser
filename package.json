@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@rsksmart/rsk-precompiled-abis": "^3.0.0-PAPYRUS",
+    "@rsksmart/rsk-precompiled-abis": "github:rsksmart/precompiled-abis",
     "web3": "^1.2.1"
   },
   "author": "",

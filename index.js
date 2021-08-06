@@ -28,7 +28,7 @@ function processLogs(tx) {
         let foundLog = bridge._jsonInterface.filter(i => i.signature === log.topics[0]);
         if (foundLog.length) {
             let log = foundLog[0];
-            console.log(`= txId: ${tx.transactionHash} event: ${log.name}`);
+            console.log(`= event: ${log.name} (${log.signature})`);
         }
     }
 }
@@ -36,9 +36,13 @@ function processLogs(tx) {
 async function procesBlock(block, client) {
     for (let txHash of block.transactions) {
         let tx = await client.eth.getTransactionReceipt(txHash);
-        // console.log(JSON.stringify(tx, null, 2));
         if (tx.to === abis.bridge.address) {
             console.log(`= got a bridge tx: ${txHash}`);
+            let txData = (await client.eth.getTransaction(txHash)).input;
+            let method = getBridge()._jsonInterface.filter(i => i.signature === txData.substr(0, 10));
+            if (method.length) {
+                console.log(`= method: ${method[0].name} (${method[0].signature})`);
+            }
             processLogs(tx);
         }
     }
@@ -85,6 +89,7 @@ async function run() {
 
         const client = new web3(network); 
         initializeBridge(client);
+
         console.log(`Starting from ${startingBlock}\n`);
         for (let i = 0; i < blocksToSearch; i++) {
             let blockNumber = startingBlock + i;
@@ -94,7 +99,6 @@ async function run() {
                 return;
             }
             console.log(`Got block ${block.number} (has ${block.transactions.length} txs)`);
-            // console.log(JSON.stringify(block, null, 2))
             await procesBlock(block, client);
             console.log('');
         }
