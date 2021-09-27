@@ -7,9 +7,11 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@rsksmart/rsk-precompiled-abis": "github:rsksmart/precompiled-abis",
-    "web3": "^1.2.1"
+    "@rsksmart/rsk-precompiled-abis": "github:rsksmart/precompiled-abis"
   },
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "web3": "^1.5.3"
+  }
 }
