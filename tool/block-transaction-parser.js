@@ -24,7 +24,7 @@ const blockTransactionParser = require('../index');
 
         // 3
         const transactionHash = "0x73a4d1592c5e922c2c6820985982d2715538717e4b4b52502685bc4c924300b7"; // mainnet
-        const transaction = await blockTransactionParser.getBridgeTransaction(web3Client, transactionHash)
+        const transaction = await blockTransactionParser.getBridgeTransactionsByTxHash(web3Client, transactionHash)
         console.log(transaction);
 
     } catch (error) {

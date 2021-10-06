@@ -39,7 +39,7 @@ const getBridgeTransactionsSinceThisBlock = async (web3Client, startingBlockHash
 
 }
 
-const getBridgeTransaction = async (web3Client, transactionHash) => {
+const getBridgeTransactionsByTxHash = async (web3Client, transactionHash) => {
     return await web3Client.eth.getTransactionReceipt(transactionHash);
 }
 
@@ -47,7 +47,7 @@ const processBlock = async (block, web3Client) => {
     const bridgeTxs = [];
     const bridge = Bridge.build(web3Client);
     for (let txHash of block.transactions) {
-        let tx = await getBridgeTransaction(web3Client, txHash);
+        let tx = await getBridgeTransactionsByTxHash(web3Client, txHash);
 
         if (tx.to === Bridge.address) {
             let txData = (await web3Client.eth.getTransaction(txHash)).input;
@@ -91,5 +91,5 @@ const verifyBlockHashOrBlockNumber = (blockHashOrBlockNumber) => {
 module.exports = {
     getBridgeTransactionsInThisBlock,
     getBridgeTransactionsSinceThisBlock,
-    getBridgeTransaction
+    getBridgeTransactionsByTxHash
 };
