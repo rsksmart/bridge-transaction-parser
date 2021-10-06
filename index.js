@@ -1,6 +1,7 @@
 const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
 const BridgeTx = require("./BridgeTx");
 const Block = require("./Block");
+const Method = require("./Method");
 
 const getBridgeTransactionsInThisBlock = async (web3Client, blockHashOrBlockNumber) => {
 
@@ -11,7 +12,7 @@ const getBridgeTransactionsInThisBlock = async (web3Client, blockHashOrBlockNumb
         throw new Error(`Block ${blockHashOrBlockNumber} not found`);
     }
 
-    return await processBlock(block, web3Client);
+    return processBlock(block, web3Client);
 }
 
 const getBridgeTransactionsSinceThisBlock = async (web3Client, startingBlockHashOrBlockNumber, blocksToSearch) => {
@@ -28,41 +29,58 @@ const getBridgeTransactionsSinceThisBlock = async (web3Client, startingBlockHash
     const result = []
     for (let i = 0; i < blocksToSearch; i++) {
         let blockNumber = parseInt(startingBlockNumber) + i;
-        let block = await web3Client.eth.getBlock(blockNumber);
-        if (!block) {
-            throw new Error(`Block ${blockNumber} not found`);
-        }
-        let bridgeTxs = await processBlock(block, web3Client);
-        result.push(new Block(block.number, block.transactions.length, bridgeTxs))
+        let bridgeTxs = await getBridgeTransactionsInThisBlock(web3Client, blockNumber)
+        result.push(bridgeTxs);
     }
     return result;
 
 }
 
 const getBridgeTransactionsByTxHash = async (web3Client, transactionHash) => {
-    return await web3Client.eth.getTransactionReceipt(transactionHash);
+    let transaction = null;
+    const tx = await web3Client.eth.getTransactionReceipt(transactionHash);
+    if (tx.to === Bridge.address) {
+        const bridge = Bridge.build(web3Client);
+
+        const txData = (await web3Client.eth.getTransaction(tx.transactionHash)).input;
+        const method = bridge._jsonInterface.filter(i => i.signature === txData.substr(0, 10));
+
+        const eventLog = decodeLogs(tx, bridge);
+
+        if (method.length) {
+            // await decodeBridgeMethodParameters(web3Client, method[0].name, method[0].data)
+            transaction = new BridgeTx(tx.transactionHash, new Method(method[0].name, method[0].signature, method[0].data), eventLog);
+        } else {
+            transaction = new BridgeTx(tx.transactionHash, null, eventLog);
+        }
+    }
+    return transaction;
+}
+
+const decodeBridgeMethodParameters = (web3Client, methodName, data) => {
+    const abi = Bridge.abi.find(m => m.name === methodName);
+    if (!abi) {
+        console.log(methodName, " does not exist in Bridge abi");
+    }
+    return web3Client.eth.abi.decodeParameters(abi.inputs, data);
 }
 
 const processBlock = async (block, web3Client) => {
     const bridgeTxs = [];
-    const bridge = Bridge.build(web3Client);
     for (let txHash of block.transactions) {
-        let tx = await getBridgeTransactionsByTxHash(web3Client, txHash);
-
-        if (tx.to === Bridge.address) {
-            let txData = (await web3Client.eth.getTransaction(txHash)).input;
-            let method = bridge._jsonInterface.filter(i => i.signature === txData.substr(0, 10));
-
-            let eventLog = decodeLogs(tx, bridge);
-
-            if (method.length) {
-                bridgeTxs.push(new BridgeTx(txHash, {name: method[0].name, signature: method[0].signature}, eventLog));
-            } else {
-                bridgeTxs.push(new BridgeTx(txHash, {}, eventLog));
-            }
-        }
+        let transaction = await getBridgeTransactionsByTxHash(web3Client, txHash)
+        if (transaction) bridgeTxs.push(transaction);
     }
-    return bridgeTxs;
+    return new Block(block.number, bridgeTxs);
+}
+
+class LogData {
+    constructor(name, signature, topic, data) {
+        this.name = name
+        this.signature = signature
+        this.topic = topic
+        this.data = data
+    }
 }
 
 const decodeLogs = (tx, bridge) => {
@@ -74,18 +92,20 @@ const decodeLogs = (tx, bridge) => {
         let foundLog = bridge._jsonInterface.filter(i => i.signature === log.topics[0]);
         if (foundLog.length) {
             let log = foundLog[0];
-            eventLogs.push({name: log.name, signature: log.signature})
+            eventLogs.push(new LogData(log.name, log.signature, log.topic, log.data))
         }
     }
     return eventLogs;
 }
 
 const verifyBlockHashOrBlockNumber = (blockHashOrBlockNumber) => {
-    if (blockHashOrBlockNumber.indexOf('0x') === 0 && blockHashOrBlockNumber.length !== 66) {
+    if (typeof blockHashOrBlockNumber === 'string' 
+        && blockHashOrBlockNumber.indexOf('0x') === 0 
+        && blockHashOrBlockNumber.length !== 66) {
         throw new Error('BlockHash [must be of length 66 starting with "0x"]');
     } else if (isNaN(blockHashOrBlockNumber) || blockHashOrBlockNumber < 0) {
         throw new Error('BlockNumber [must be greater than 0]');
-    }
+    } 
 }
 
 module.exports = {
