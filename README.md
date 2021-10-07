@@ -6,8 +6,11 @@ A tool to find interactions with the Bridge on RSK
 2. Install dependencies `npm install`
 
 ## Run console tool:
-`node tool/block-transaction-parser.js $network $startingBlock $blocksToSearch`
+`node tool/bridge-transaction-txHash.js $network $txHash`
+`node tool/bridge-transactions-single-block.js $network $blockHashOrBlockNumber`
+`node tool/bridge-transactions-multiple-block.js $network $startingBlockHashOrBlockNumber $blocksToSearch`
 
 - `network`: mainnet or testnet
-- `starting block`: block number from where to start searching interaction with the Bridge contract
+- `txHash`: A transaction hash.
+- `starting block hash or number`: block hash or number from where to start searching interaction with the Bridge contract
 - `blocks to search`: amount of blocks to search, from the starting block forward. Max 100 blocks.

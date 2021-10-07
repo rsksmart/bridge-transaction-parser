@@ -1,7 +1,7 @@
 module.exports = class BridgeTx {
-    constructor(txHash, method, event) {
+    constructor(txHash, method, events) {
         this.txHash = txHash
         this.method = method
-        this.event = event
+        this.events = events
     }
 }

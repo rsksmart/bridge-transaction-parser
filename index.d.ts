@@ -7,11 +7,11 @@ interface Transaction {
 
 interface BridgeTx {
     txHash: string,
-    method: Method,
-    event: string
+    method: BridgeMethod,
+    events: string
 }
 
-interface Method {
+interface BridgeMethod {
     name: string,
     signature: string,
     data: string

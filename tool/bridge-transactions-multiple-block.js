@@ -10,7 +10,7 @@ const blockTransactionParser = require('../index');
 
         const startingBlock = process.argv[3];
         const blocksToSearch = process.argv[4]; // Input should be between 1 and 100
-
+        console.log("Searching...");
         const transactions = await blockTransactionParser.getBridgeTransactionsSinceThisBlock(web3Client, startingBlock, blocksToSearch);
         console.log(JSON.stringify(transactions, null, 4));
 

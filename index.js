@@ -1,7 +1,8 @@
 const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
 const BridgeTx = require("./BridgeTx");
 const Block = require("./Block");
-const Method = require("./Method");
+const BridgeMethod = require("./BridgeMethod");
+const LogData = require("./LogData");
 
 const getBridgeTransactionsInThisBlock = async (web3Client, blockHashOrBlockNumber) => {
 
@@ -49,7 +50,7 @@ const getBridgeTransactionsByTxHash = async (web3Client, transactionHash) => {
 
         if (method.length) {
             // await decodeBridgeMethodParameters(web3Client, method[0].name, method[0].data)
-            transaction = new BridgeTx(tx.transactionHash, new Method(method[0].name, method[0].signature, method[0].data), eventLog);
+            transaction = new BridgeTx(tx.transactionHash, new BridgeMethod(method[0].name, method[0].signature, method[0].data), eventLog);
         } else {
             transaction = new BridgeTx(tx.transactionHash, null, eventLog);
         }
@@ -72,15 +73,6 @@ const processBlock = async (block, web3Client) => {
         if (transaction) bridgeTxs.push(transaction);
     }
     return new Block(block.number, bridgeTxs);
-}
-
-class LogData {
-    constructor(name, signature, topic, data) {
-        this.name = name
-        this.signature = signature
-        this.topic = topic
-        this.data = data
-    }
 }
 
 const decodeLogs = (tx, bridge) => {
