@@ -1,6 +1,6 @@
 {
-  "name": "bridge-events-checker",
-  "version": "1.0.0",
+  "name": "bridge-transaction-parser",
+  "version": "0.1.0-beta",
   "description": "",
   "main": "index.js",
   "scripts": {

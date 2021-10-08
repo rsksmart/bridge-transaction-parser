@@ -1,4 +1,4 @@
-# bridge-event-checker
+# bridge-transaction-parser
 A tool to find interactions with the Bridge on RSK
 
 ## Prerequisites
