@@ -1,61 +1,70 @@
 const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
 const BridgeTx = require("./BridgeTx");
-const Block = require("./Block");
 const BridgeMethod = require("./BridgeMethod");
-const LogData = require("./LogData");
+const BridgeEvent = require("./BridgeEvent");
+
+const getBridgeTransactionByTxHash = async (web3Client, transactionHash) => {
+    verifyHashOrBlockNumber(transactionHash);
+
+    let transaction;
+    const txReceipt = await web3Client.eth.getTransactionReceipt(transactionHash);
+    
+    if (txReceipt?.to === Bridge.address) {
+        const bridge = Bridge.build(web3Client);
+
+        const txData = (await web3Client.eth.getTransaction(txReceipt.transactionHash)).input;
+        const method = bridge._jsonInterface.filter(i => i.signature === txData.substr(0, 10));
+        const events = decodeLogs(web3Client, txReceipt, bridge);
+
+        let bridgeMethod = '';
+        if (method.length) {
+            // TODO: For some reason we are getting an error when decoding the method data
+            // let params = await decodeBridgeMethodParameters(web3Client, method[0].name, txData);
+            bridgeMethod = new BridgeMethod(method[0].name, method[0].signature, txData);
+        }
+        transaction = new BridgeTx(txReceipt.transactionHash, bridgeMethod, events, txReceipt.blockNumber);
+    }
+    return transaction;
+}
 
 const getBridgeTransactionsInThisBlock = async (web3Client, blockHashOrBlockNumber) => {
-
-    verifyBlockHashOrBlockNumber(blockHashOrBlockNumber);
+    verifyHashOrBlockNumber(blockHashOrBlockNumber);
 
     const block = await web3Client.eth.getBlock(blockHashOrBlockNumber);
     if (!block) {
         throw new Error(`Block ${blockHashOrBlockNumber} not found`);
     }
 
-    return processBlock(block, web3Client);
+    const bridgeTxs = [];
+    for (let txHash of block.transactions) {
+        let transaction = await getBridgeTransactionByTxHash(web3Client, txHash);
+        if (transaction) {
+            bridgeTxs.push(transaction);
+        }
+    }
+    return bridgeTxs;
 }
 
 const getBridgeTransactionsSinceThisBlock = async (web3Client, startingBlockHashOrBlockNumber, blocksToSearch) => {
-
-    verifyBlockHashOrBlockNumber(startingBlockHashOrBlockNumber);
+    verifyHashOrBlockNumber(startingBlockHashOrBlockNumber);
 
     if (isNaN(blocksToSearch) || blocksToSearch > 100 || blocksToSearch <= 0) {
-        throw new Error('blocksToSearch [must be greater than 0 or less than 100]');
+        throw new Error('blocksToSearch must be greater than 0 or less than 100');
     }
 
     const startingBlockNumber = startingBlockHashOrBlockNumber.indexOf('0x') === 0 ?
         (await web3Client.eth.getBlock(startingBlockHashOrBlockNumber)).number : startingBlockHashOrBlockNumber;
     
-    const result = []
+    const bridgeTxs = [];
     for (let i = 0; i < blocksToSearch; i++) {
         let blockNumber = parseInt(startingBlockNumber) + i;
-        let bridgeTxs = await getBridgeTransactionsInThisBlock(web3Client, blockNumber)
-        result.push(bridgeTxs);
-    }
-    return result;
-
-}
-
-const getBridgeTransactionsByTxHash = async (web3Client, transactionHash) => {
-    let transaction = null;
-    const tx = await web3Client.eth.getTransactionReceipt(transactionHash);
-    if (tx.to === Bridge.address) {
-        const bridge = Bridge.build(web3Client);
-
-        const txData = (await web3Client.eth.getTransaction(tx.transactionHash)).input;
-        const method = bridge._jsonInterface.filter(i => i.signature === txData.substr(0, 10));
-
-        const eventLog = decodeLogs(tx, bridge);
-
-        if (method.length) {
-            // await decodeBridgeMethodParameters(web3Client, method[0].name, method[0].data)
-            transaction = new BridgeTx(tx.transactionHash, new BridgeMethod(method[0].name, method[0].signature, method[0].data), eventLog);
-        } else {
-            transaction = new BridgeTx(tx.transactionHash, null, eventLog);
+        let blockBridgeTxs = await getBridgeTransactionsInThisBlock(web3Client, blockNumber);
+        if (blockBridgeTxs.length) {
+            bridgeTxs.push(blockBridgeTxs);
         }
     }
-    return transaction;
+    return bridgeTxs;
+
 }
 
 const decodeBridgeMethodParameters = (web3Client, methodName, data) => {
@@ -63,45 +72,51 @@ const decodeBridgeMethodParameters = (web3Client, methodName, data) => {
     if (!abi) {
         console.log(methodName, " does not exist in Bridge abi");
     }
+    
     return web3Client.eth.abi.decodeParameters(abi.inputs, data);
 }
 
-const processBlock = async (block, web3Client) => {
-    const bridgeTxs = [];
-    for (let txHash of block.transactions) {
-        let transaction = await getBridgeTransactionsByTxHash(web3Client, txHash)
-        if (transaction) bridgeTxs.push(transaction);
-    }
-    return new Block(block.number, bridgeTxs);
-}
+const decodeLogs = (web3Client, tx, bridge) => {
+    const events = [];
+    for (let txLog of tx.logs) {
+        let bridgeEventSearch = bridge._jsonInterface.filter(i => i.signature === txLog.topics[0]);
 
-const decodeLogs = (tx, bridge) => {
-    if (!tx.logs.length) {
-        return null;
-    }
-    const eventLogs = []
-    for (let log of tx.logs) {
-        let foundLog = bridge._jsonInterface.filter(i => i.signature === log.topics[0]);
-        if (foundLog.length) {
-            let log = foundLog[0];
-            eventLogs.push(new LogData(log.name, log.signature, log.topic, log.data))
+        if (bridgeEventSearch.length) {
+            let bridgeEvent = bridgeEventSearch[0];
+            let args = [];
+            let dataDecoded = web3Client.eth.abi.decodeParameters(bridgeEvent.inputs.filter(i => !i.indexed), txLog.data);
+
+            let topicIndex = 1;
+            for (let input of bridgeEvent.inputs) {
+                let value;
+                if (input.indexed) {
+                    value = web3Client.eth.abi.decodeParameter(input.type, txLog.topics[topicIndex]);
+                    topicIndex ++;
+                } else {
+                    value = dataDecoded[input.name];
+                }
+                
+                args.push(input.name + ": " + value);
+            }
+            events.push(new BridgeEvent(bridgeEvent.name, bridgeEvent.signature, args));
         }
     }
-    return eventLogs;
+
+    return events;
 }
 
-const verifyBlockHashOrBlockNumber = (blockHashOrBlockNumber) => {
-    if (typeof blockHashOrBlockNumber === 'string' 
-        && blockHashOrBlockNumber.indexOf('0x') === 0 
-        && blockHashOrBlockNumber.length !== 66) {
-        throw new Error('BlockHash [must be of length 66 starting with "0x"]');
+const verifyHashOrBlockNumber = (blockHashOrBlockNumber) => {
+    if (typeof blockHashOrBlockNumber === 'string' && 
+        blockHashOrBlockNumber.indexOf('0x') === 0 && 
+        blockHashOrBlockNumber.length !== 66) {
+        throw new Error('Hash must be of length 66 starting with "0x"');
     } else if (isNaN(blockHashOrBlockNumber) || blockHashOrBlockNumber < 0) {
-        throw new Error('BlockNumber [must be greater than 0]');
+        throw new Error('Block number must be greater than 0');
     } 
 }
 
 module.exports = {
     getBridgeTransactionsInThisBlock,
     getBridgeTransactionsSinceThisBlock,
-    getBridgeTransactionsByTxHash
+    getBridgeTransactionByTxHash
 };
