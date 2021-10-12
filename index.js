@@ -13,16 +13,17 @@ const getBridgeTransactionByTxHash = async (web3Client, transactionHash) => {
         const bridge = Bridge.build(web3Client);
 
         const txData = (await web3Client.eth.getTransaction(txReceipt.transactionHash)).input;
-        const method = bridge._jsonInterface.filter(i => i.signature === txData.substr(0, 10));
+        const method = bridge._jsonInterface.find(i => i.signature === txData.substr(0, 10));
         const events = decodeLogs(web3Client, txReceipt, bridge);
 
         let bridgeMethod = '';
-        if (method.length) {
-            let args = await decodeBridgeMethodParameters(web3Client, method[0].name, txData);
-            bridgeMethod = new BridgeMethod(method[0].name, method[0].signature, args);
+        if (method) {
+            let args = await decodeBridgeMethodParameters(web3Client, method.name, txData);
+            bridgeMethod = new BridgeMethod(method.name, method.signature, args);
         }
         transaction = new BridgeTx(txReceipt.transactionHash, bridgeMethod, events, txReceipt.blockNumber);
     }
+    
     return transaction;
 }
 
@@ -86,10 +87,9 @@ const decodeBridgeMethodParameters = (web3Client, methodName, data) => {
 const decodeLogs = (web3Client, tx, bridge) => {
     const events = [];
     for (let txLog of tx.logs) {
-        let bridgeEventSearch = bridge._jsonInterface.filter(i => i.signature === txLog.topics[0]);
+        let bridgeEvent = bridge._jsonInterface.find(i => i.signature === txLog.topics[0]);
         
-        if (bridgeEventSearch.length) {
-            let bridgeEvent = bridgeEventSearch[0];
+        if (bridgeEvent) {
             let args = [];
             let dataDecoded = web3Client.eth.abi.decodeParameters(bridgeEvent.inputs.filter(i => !i.indexed), txLog.data);
 
