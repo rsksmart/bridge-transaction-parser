@@ -10,8 +10,7 @@ interface Transaction {
 interface BridgeMethod {
     name: string,
     signature: string,
-    data: string,
-    args: object
+    arguments: []
 }
 
 interface BridgeEvent {

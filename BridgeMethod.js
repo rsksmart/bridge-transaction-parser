@@ -1,8 +1,7 @@
 module.exports = class BridgeMethod {
-    constructor(name, signature, data, args) {
+    constructor(name, signature, args) {
         this.name = name;
         this.signature = signature;
-        this.data = data;
-        this.args = args;
+        this.arguments = args;
     }
 }
