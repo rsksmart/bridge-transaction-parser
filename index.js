@@ -18,9 +18,8 @@ const getBridgeTransactionByTxHash = async (web3Client, transactionHash) => {
 
         let bridgeMethod = '';
         if (method.length) {
-            // TODO: For some reason we are getting an error when decoding the method data
-            // let params = await decodeBridgeMethodParameters(web3Client, method[0].name, txData);
-            bridgeMethod = new BridgeMethod(method[0].name, method[0].signature, txData);
+            let params = await decodeBridgeMethodParameters(web3Client, method[0].name, txData);
+            bridgeMethod = new BridgeMethod(method[0].name, method[0].signature, txData, params);
         }
         transaction = new BridgeTx(txReceipt.transactionHash, bridgeMethod, events, txReceipt.blockNumber);
     }
@@ -73,7 +72,8 @@ const decodeBridgeMethodParameters = (web3Client, methodName, data) => {
         throw new Error(methodName, " does not exist in Bridge abi");
     }
     
-    return web3Client.eth.abi.decodeParameters(abi.inputs, data);
+    // Remove the signature bits from the data
+    return web3Client.eth.abi.decodeParameters(abi.inputs, data.substring(10));
 }
 
 const decodeLogs = (web3Client, tx, bridge) => {
