@@ -34,7 +34,7 @@ export function getBridgeTransactionsInThisBlock(web3Client: Web3, blockHashOrBl
  * @param blocksToSearch Number/Amount of blocks to search
  * @returns Array - Array of transaction objects
  */
-export function getBridgeTransactionsSinceThisBlock(web3Client: Web3, startingBlockHashOrBlockNumber: string | number, blocksToSearch: string): Promise<Array<Array<Transaction>>>;
+export function getBridgeTransactionsSinceThisBlock(web3Client: Web3, startingBlockHashOrBlockNumber: string | number, blocksToSearch: string): Promise<Array<Transaction>>;
 
 /**
  * Gets a Single Bridge Transaction Via The Transaction Hash.

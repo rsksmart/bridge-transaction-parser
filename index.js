@@ -59,7 +59,7 @@ const getBridgeTransactionsSinceThisBlock = async (web3Client, startingBlockHash
         let blockNumber = parseInt(startingBlockNumber) + i;
         let blockBridgeTxs = await getBridgeTransactionsInThisBlock(web3Client, blockNumber);
         if (blockBridgeTxs.length) {
-            bridgeTxs.push(blockBridgeTxs);
+            bridgeTxs.push(...blockBridgeTxs);
         }
     }
     return bridgeTxs;

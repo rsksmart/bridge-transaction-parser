@@ -233,9 +233,8 @@ describe('Get Bridge Transactions From Multiple Blocks', () => {
         const startingBlockHash = "0x74cdc98cd3f98fa85cecc749ce832f9f89bfb5ed9aacccea8fc4aa1d2792ec35";
         const blocksToSearch = 5;
         let result = await transactionParser.getBridgeTransactionsSinceThisBlock(web3ClientStub, startingBlockHash, blocksToSearch);
-        assert.lengthOf(result, 5)
-        assert.lengthOf(result[0], 2)
-        assert.equal(result[0][1].txHash, expectedTxHash);
+        assert.lengthOf(result, 10);
+        assert.equal(result[0].txHash, expectedTxHash);
     });
 
 })
