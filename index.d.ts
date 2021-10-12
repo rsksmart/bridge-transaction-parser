@@ -1,20 +1,23 @@
 import Web3 from "web3";
 
 interface Transaction {
-    blockNumber: number,
-    bridgeTxs: BridgeTx[]
-}
-
-interface BridgeTx {
     txHash: string,
     method: BridgeMethod,
-    events: string
+    events: BridgeEvent[],
+    blockNumber: number
 }
 
 interface BridgeMethod {
     name: string,
     signature: string,
-    data: string
+    data: string,
+    args: object
+}
+
+interface BridgeEvent {
+    name: string,
+    signature: string,
+    arguments: []
 }
 
 /**
@@ -32,7 +35,7 @@ export function getBridgeTransactionsInThisBlock(web3Client: Web3, blockHashOrBl
  * @param blocksToSearch Number/Amount of blocks to search
  * @returns Array - Array of transaction objects
  */
-export function getBridgeTransactionsSinceThisBlock(web3Client: Web3, startingBlockHashOrBlockNumber: string | number, blocksToSearch: string): Promise<Array<Transaction>>;
+export function getBridgeTransactionsSinceThisBlock(web3Client: Web3, startingBlockHashOrBlockNumber: string | number, blocksToSearch: string): Promise<Array<Array<Transaction>>>;
 
 /**
  * Gets a Single Bridge Transaction Via The Transaction Hash.

@@ -29,11 +29,25 @@ const bridgeInstanceStub = {
         ]
 };
 
+const abiStub = {
+    name: 'updateCollections',
+    type: 'function',
+    constant: false,
+    inputs: [],
+    outputs: [],
+    signature: '0x0c5a9990'
+};
+
 const bridgeStub = {
     build: () => {
         return bridgeInstanceStub
     },
-    address: "0x0000000000000000000000000000000001000006"
+    address: "0x0000000000000000000000000000000001000006",
+    abi: ({
+        find: () => {
+            return abiStub;
+        }
+    })
 }
 
 const txReceipt = {
