@@ -52,7 +52,7 @@ const getBridgeTransactionsSinceThisBlock = async (web3Client, startingBlockHash
         throw new Error('blocksToSearch must be greater than 0 or less than 100');
     }
 
-    const startingBlockNumber = startingBlockHashOrBlockNumber.indexOf('0x') === 0 ?
+    const startingBlockNumber = typeof startingBlockHashOrBlockNumber === 'string' && startingBlockHashOrBlockNumber.indexOf('0x') === 0 ?
         (await web3Client.eth.getBlock(startingBlockHashOrBlockNumber)).number : startingBlockHashOrBlockNumber;
     
     const bridgeTxs = [];
@@ -70,7 +70,7 @@ const getBridgeTransactionsSinceThisBlock = async (web3Client, startingBlockHash
 const decodeBridgeMethodParameters = (web3Client, methodName, data) => {
     const abi = Bridge.abi.find(m => m.name === methodName);
     if (!abi) {
-        console.log(methodName, " does not exist in Bridge abi");
+        throw new Error(methodName, " does not exist in Bridge abi");
     }
     
     return web3Client.eth.abi.decodeParameters(abi.inputs, data);
@@ -80,7 +80,7 @@ const decodeLogs = (web3Client, tx, bridge) => {
     const events = [];
     for (let txLog of tx.logs) {
         let bridgeEventSearch = bridge._jsonInterface.filter(i => i.signature === txLog.topics[0]);
-
+        
         if (bridgeEventSearch.length) {
             let bridgeEvent = bridgeEventSearch[0];
             let args = [];
@@ -110,7 +110,7 @@ const verifyHashOrBlockNumber = (blockHashOrBlockNumber) => {
         blockHashOrBlockNumber.indexOf('0x') === 0 && 
         blockHashOrBlockNumber.length !== 66) {
         throw new Error('Hash must be of length 66 starting with "0x"');
-    } else if (isNaN(blockHashOrBlockNumber) || blockHashOrBlockNumber < 0) {
+    } else if (isNaN(blockHashOrBlockNumber) || blockHashOrBlockNumber <= 0) {
         throw new Error('Block number must be greater than 0');
     } 
 }
