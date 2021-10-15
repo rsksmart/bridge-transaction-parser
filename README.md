@@ -1,13 +1,16 @@
-# bridge-event-checker
+# bridge-transaction-parser
 A tool to find interactions with the Bridge on RSK
 
 ## Prerequisites
 1. Have nodejs installed https://nodejs.org/
 2. Install dependencies `npm install`
 
-## Run
-`node index.js [starting block] [blocks to search] [network]`
+## Run console tool:
+`node tool/bridge-transaction-txHash.js $network $txHash`
+`node tool/bridge-transactions-single-block.js $network $blockHashOrBlockNumber`
+`node tool/bridge-transactions-multiple-block.js $network $startingBlockHashOrBlockNumber $blocksToSearch`
 
-- `starting block`: block number from where to start searching interaction with the Bridge contract
-- `blocks to search`: amount of blocks to search, from the starting block forward. Max 100 blocks, same value by default if no parameter is passed
-- `network`: can be `mainnet` or `testnet`. By default it's `testnet`
+- `network`: mainnet or testnet
+- `txHash`: A transaction hash.
+- `starting block hash or number`: block hash or number from where to start searching interaction with the Bridge contract
+- `blocks to search`: amount of blocks to search, from the starting block forward. Max 100 blocks.

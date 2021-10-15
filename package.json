@@ -1,15 +1,23 @@
 {
-  "name": "bridge-events-checker",
-  "version": "1.0.0",
+  "name": "bridge-transaction-parser",
+  "version": "0.1.0-beta",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "nyc mocha --timeout 10000"
   },
   "dependencies": {
-    "@rsksmart/rsk-precompiled-abis": "github:rsksmart/precompiled-abis",
-    "web3": "^1.2.1"
+    "@rsksmart/rsk-precompiled-abis": "^4.0.2-IRIS"
   },
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^9.1.2",
+    "nyc": "^15.1.0",
+    "rewire": "^5.0.0",
+    "sinon": "^11.1.2",
+    "web3": "^1.5.3"
+  }
 }
