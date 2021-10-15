@@ -45,6 +45,7 @@ const getBridgeTransactionsInThisBlock = async (web3Client, blockHashOrBlockNumb
     return bridgeTxs;
 }
 
+// TODO: Add test case to verify that a search going beyond the best block should fail
 const getBridgeTransactionsSinceThisBlock = async (web3Client, startingBlockHashOrBlockNumber, blocksToSearch) => {
     verifyHashOrBlockNumber(startingBlockHashOrBlockNumber);
 
@@ -70,15 +71,16 @@ const getBridgeTransactionsSinceThisBlock = async (web3Client, startingBlockHash
 const decodeBridgeMethodParameters = (web3Client, methodName, data) => {
     const abi = Bridge.abi.find(m => m.name === methodName);
     if (!abi) {
-        throw new Error(methodName, " does not exist in Bridge abi");
+        throw new Error(`${methodName} does not exist in Bridge abi`);
     }
 
     let argumentsData = data.substring(10); // Remove the signature bits from the data
     let dataDecoded = web3Client.eth.abi.decodeParameters(abi.inputs, argumentsData);
 
-    let args = [];
+    // TODO: the parsing of the arguments is not tested
+    let args = {};
     for (let input of abi.inputs) {
-        args.push(input.name + ": " + dataDecoded[input.name]);
+        args[input.name] = dataDecoded[input.name];
     }
 
     return args;
@@ -90,7 +92,7 @@ const decodeLogs = (web3Client, tx, bridge) => {
         let bridgeEvent = bridge._jsonInterface.find(i => i.signature === txLog.topics[0]);
         
         if (bridgeEvent) {
-            let args = [];
+            let args = {};
             let dataDecoded = web3Client.eth.abi.decodeParameters(bridgeEvent.inputs.filter(i => !i.indexed), txLog.data);
 
             let topicIndex = 1;
@@ -103,7 +105,7 @@ const decodeLogs = (web3Client, tx, bridge) => {
                     value = dataDecoded[input.name];
                 }
                 
-                args.push(input.name + ": " + value);
+                args[input.name] = value;
             }
             events.push(new BridgeEvent(bridgeEvent.name, bridgeEvent.signature, args));
         }

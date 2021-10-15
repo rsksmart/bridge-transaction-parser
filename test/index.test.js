@@ -312,23 +312,17 @@ describe('Get Bridge Transaction By Tx Hash', () => {
         
         assert.equal(result.method.name, "updateCollections");
         assert.equal(result.method.signature, "0x0c5a9990");
-        assert.lengthOf(result.method.arguments, 0);
 
         assert.lengthOf(result.events, 2);
         assert.equal(result.events[0].name, "update_collections");
         assert.equal(result.events[0].signature, "0x1069152f4f916cbf155ee32a695d92258481944edb5b6fd649718fc1b43e515e");
-        assert.lengthOf(result.events[0].arguments, 1);
-        assert.deepEqual(result.events[0].arguments, ['sender: 0xFE90f02331DdF62cb50F5650Dca554b47B37c471']);
+        assert.equal(result.events[0].arguments.sender, '0xFE90f02331DdF62cb50F5650Dca554b47B37c471');
 
         assert.equal(result.events[1].name, "release_requested");
         assert.equal(result.events[1].signature, "0x7a7c29481528ac8c2b2e93aee658fddd4dc15304fa723a5c2b88514557bcc790");
-        assert.lengthOf(result.events[1].arguments, 3);
-        assert.deepEqual(result.events[1].arguments, [
-            "rskTxHash: 0x6b735fe7af1819082404d3d05133ceaba3ebfc400cdfd621261285e6b092371f",
-            "btcTxHash: 0x7cbbf9d911d8e76b2a3a4b02a430b39b0b5c3b95f3ee2ca5df1483980d960e0b",
-            "amount: 1011610"
-          ]
-        );
+        assert.equal(result.events[1].arguments.rskTxHash, "0x6b735fe7af1819082404d3d05133ceaba3ebfc400cdfd621261285e6b092371f");
+        assert.equal(result.events[1].arguments.btcTxHash, "0x7cbbf9d911d8e76b2a3a4b02a430b39b0b5c3b95f3ee2ca5df1483980d960e0b");
+        assert.equal(result.events[1].arguments.amount, "1011610");
     });
 })
 
