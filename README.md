@@ -2,7 +2,7 @@
 A tool to find interactions with the Bridge on RSK
 
 ## Prerequisites
-1. Have nodejs installed https://nodejs.org/
+1. Have nodejs installed https://nodejs.org/. Minimum version: 14.
 2. Install dependencies `npm install`
 
 ## Run console tool:
