@@ -1,6 +1,10 @@
 # bridge-transaction-parser
 A tool to find interactions with the Bridge on RSK
 
+# Disclaimer
+
+This is a beta version until audited by the security team. Any comments or suggestions feel free to contribute or reach out at our [open slack](https://developers.rsk.co/slack).
+
 ## Prerequisites
 1. Have nodejs installed https://nodejs.org/
 2. Install dependencies `npm install`
