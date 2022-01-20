@@ -11,7 +11,7 @@ const blockTransactionParser = require('../index');
         const blocksToSearch = process.argv[4]; // Input should be between 1 and 100
         
         console.log("Searching...");
-        const transactions = await blockTransactionParser.getBridgeTransactionsSinceThisBlock(web3Client, startingBlock, blocksToSearch);
+        const transactions = await blockTransactionParser.getBridgeTransactionsSinceThisBlock(web3Client, startingBlock, blocksToSearch, network);
         
         if (transactions.length) {
             console.log(JSON.stringify(transactions, null, 2));
