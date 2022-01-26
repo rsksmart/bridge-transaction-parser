@@ -8,7 +8,7 @@ const btcAddressFromPublicKeyHash = (pubKeyHash, network) => {
 };
 
 const getNetwork = (network) => {
-    return network === "mainnet" ? bitcoin.networks.MAINNET : bitcoin.networks.testnet;
+    return network === "mainnet" ? bitcoin.networks.bitcoin : bitcoin.networks.testnet;
 };
 
 const stripHexPrefix = (str) => {
