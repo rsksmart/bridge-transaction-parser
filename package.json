@@ -1,13 +1,14 @@
 {
   "name": "bridge-transaction-parser",
-  "version": "0.1.0-beta",
+  "version": "0.1.1-beta",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "nyc mocha --timeout 10000"
   },
   "dependencies": {
-    "@rsksmart/rsk-precompiled-abis": "^4.0.2-IRIS"
+    "@rsksmart/rsk-precompiled-abis": "^4.0.2-IRIS",
+    "bitcoinjs-lib": "^6.0.1"
   },
   "author": "",
   "license": "MIT",
