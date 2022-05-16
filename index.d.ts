@@ -10,13 +10,13 @@ interface Transaction {
 interface BridgeMethod {
     name: string,
     signature: string,
-    arguments: []
+    arguments: Map<string, unknown>
 }
 
 interface BridgeEvent {
     name: string,
     signature: string,
-    arguments: []
+    arguments: Map<string, unknown>
 }
 
 /**
@@ -45,4 +45,4 @@ export function getBridgeTransactionsSinceThisBlock(web3Client: Web3, startingBl
  * @param network The network.
  * @returns Object - A transaction object
  */
-export function getBridgeTransactionsByTxHash(web3Client: Web3, transactionHash: string, network: string): Promise<Transaction>;
+export function getBridgeTransactionByTxHash(web3Client: Web3, transactionHash: string, network: string): Promise<Transaction>;

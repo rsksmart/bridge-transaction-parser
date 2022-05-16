@@ -79,9 +79,9 @@ const decodeBridgeMethodParameters = (web3Client, methodName, data) => {
     let dataDecoded = web3Client.eth.abi.decodeParameters(abi.inputs, argumentsData);
 
     // TODO: the parsing of the arguments is not tested
-    let args = {};
+    let args = new Map();
     for (let input of abi.inputs) {
-        args[input.name] = dataDecoded[input.name];
+        args.set(input.name, dataDecoded[input.name]);
     }
 
     return args;
@@ -93,7 +93,7 @@ const decodeLogs = (web3Client, tx, bridge, network) => {
         let bridgeEvent = bridge._jsonInterface.find(i => i.signature === txLog.topics[0]);
         
         if (bridgeEvent) {
-            let args = {};
+            let args = new Map();
             let dataDecoded = web3Client.eth.abi.decodeParameters(bridgeEvent.inputs.filter(i => !i.indexed), txLog.data);
 
             let topicIndex = 1;
@@ -108,7 +108,7 @@ const decodeLogs = (web3Client, tx, bridge, network) => {
                 if (input.name === "btcDestinationAddress") {
                     value = utils.btcAddressFromPublicKeyHash(value, network);
                 }
-                args[input.name] = value;
+                args.set(input.name, value);
             }
             events.push(new BridgeEvent(bridgeEvent.name, bridgeEvent.signature, args));
         }
