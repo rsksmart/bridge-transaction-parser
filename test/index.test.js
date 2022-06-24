@@ -179,15 +179,19 @@ const txReceiptsStub = [
 
 const transactionsStub = [
     {
-        transactionHash: '0x112439355294e02096078c3b77cb12546fe79d284f46d478b3584873c2bacb8b',
+        hash: '0x6547e88a30d1b43c6fbea07fa7443dfeb697d076495c3e4fc56ebf40228e0431',
+        input: ''
+    },
+    {
+        hash: '0x112439355294e02096078c3b77cb12546fe79d284f46d478b3584873c2bacb8b',
         input: '0x1533330f0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002046a7b0b12a6a01f08f738aca89682278e439c6f122febd0e8f86659f594f43ae'
     },
     {
-        transactionHash: '0x73a4d1592c5e922c2c6820985982d2715538717e4b4b52502685bc4c924300b7',
+        hash: '0x73a4d1592c5e922c2c6820985982d2715538717e4b4b52502685bc4c924300b7',
         input: '0x0c5a9990'
     },
     {
-        transactionHash: '0x7a3c39f59e1f2c624602c9b54c28155a251963ec878049c0f78a7d281b2e3b87',
+        hash: '0x7a3c39f59e1f2c624602c9b54c28155a251963ec878049c0f78a7d281b2e3b87',
         input: '0xe5400e7b000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000005000000020072f3cd0fb1f55b05fc2022dfcffe2ab3f5f35eb661c22520b00000000000000ff3adfeb1f20aa198d665620a7d77e4d3d1ffdc44c1cbf8ca1ef13c9309d5a7bb1c36161ffff001dd6870fb600000000000000000000000000000000'
     }
 ]
@@ -283,7 +287,7 @@ const web3ClientStub = {
             return txReceiptsStub.find(txReceipt => txReceipt.transactionHash === txHash);
         },
         getTransaction: (txHash) => {
-            return transactionsStub.find(tx => tx.transactionHash === txHash);
+            return transactionsStub.find(tx => tx.hash === txHash);
         },
         getBlock: (blockHashOrBlockNumber) => {
             return blocksStub.find(block => block.number === blockHashOrBlockNumber || block.hash === blockHashOrBlockNumber);
@@ -447,3 +451,68 @@ describe('Get Bridge Transactions From Multiple Blocks', () => {
         assert.equal(result[2].txHash, blocksStub[2].transactions[0]);
     });
 });
+
+describe('Gets a Bridge Transaction given a bridgeTx: web3TransactionObject and a bridgeTxReceipt: TransactionReceipt', () => {
+
+    beforeEach((done) => {
+        transactionParser = rewire('../index');
+        transactionParser.__set__({
+            'Bridge': bridgeStub
+        });
+        sandbox = sinon.createSandbox();
+        done();
+    });
+
+    afterEach((done) => {
+        sandbox.restore();
+        done();
+    });
+
+    it('Should fail when BridgeTx and BridgeTxReceipt have different transaction hashes', async () => {
+        const bridgeTx = web3ClientStub.eth.getTransaction("0x7a3c39f59e1f2c624602c9b54c28155a251963ec878049c0f78a7d281b2e3b87");
+        const bridgeTxReceipt = web3ClientStub.eth.getTransactionReceipt("0x112439355294e02096078c3b77cb12546fe79d284f46d478b3584873c2bacb8b");
+
+        await expect(transactionParser.decodeBridgeTransaction(web3ClientStub, bridgeTx, bridgeTxReceipt, network))
+          .to.be.rejectedWith(`Given bridgeTx(${bridgeTx.hash}) and bridgeTxReceipt(${bridgeTxReceipt.transactionHash}) 
+        should belong to the same transaction.`);
+    });
+
+    it('Should fail when passing a non bridgeTxReceipt', async () => {
+        const bridgeTx = web3ClientStub.eth.getTransaction("0x6547e88a30d1b43c6fbea07fa7443dfeb697d076495c3e4fc56ebf40228e0431");
+        const nonBridgeTxReceipt = web3ClientStub.eth.getTransactionReceipt("0x6547e88a30d1b43c6fbea07fa7443dfeb697d076495c3e4fc56ebf40228e0431");
+
+        await expect(transactionParser.decodeBridgeTransaction(web3ClientStub, bridgeTx, nonBridgeTxReceipt, network))
+          .to.be.rejectedWith(`Given bridgeTxReceipt is not a bridge transaction`);
+    });
+
+    it('Should decode a bridge transaction from a bridgeTx web3Object and a bridgeTxReceipt as well as a web3Object' +
+      'into a Transaction object', async () => {
+        const bridgeTx = web3ClientStub.eth.getTransaction("0x73a4d1592c5e922c2c6820985982d2715538717e4b4b52502685bc4c924300b7");
+        const bridgeTxReceipt = web3ClientStub.eth.getTransactionReceipt("0x73a4d1592c5e922c2c6820985982d2715538717e4b4b52502685bc4c924300b7");
+
+        const transaction = await transactionParser.decodeBridgeTransaction(web3ClientStub, bridgeTx, bridgeTxReceipt, network)
+
+        assert.equal(transaction.txHash, bridgeTxReceipt.transactionHash);
+        assert.equal(transaction.blockNumber, bridgeTxReceipt.blockNumber);
+
+        assert.equal(transaction.method.name, "updateCollections");
+        assert.equal(transaction.method.signature, "0x0c5a9990");
+
+        assert.lengthOf(transaction.events, 3);
+        assert.equal(transaction.events[0].name, "update_collections");
+        assert.equal(transaction.events[0].signature, "0x1069152f4f916cbf155ee32a695d92258481944edb5b6fd649718fc1b43e515e");
+        assert.equal(transaction.events[0].arguments.get('sender'), '0xFE90f02331DdF62cb50F5650Dca554b47B37c471');
+
+        assert.equal(transaction.events[1].name, "release_requested");
+        assert.equal(transaction.events[1].signature, "0x7a7c29481528ac8c2b2e93aee658fddd4dc15304fa723a5c2b88514557bcc790");
+        assert.equal(transaction.events[1].arguments.get('rskTxHash'), "0x6b735fe7af1819082404d3d05133ceaba3ebfc400cdfd621261285e6b092371f");
+        assert.equal(transaction.events[1].arguments.get('btcTxHash'), "0x7cbbf9d911d8e76b2a3a4b02a430b39b0b5c3b95f3ee2ca5df1483980d960e0b");
+        assert.equal(transaction.events[1].arguments.get('amount'), "1011610");
+
+        assert.equal(transaction.events[2].name, "release_request_received");
+        assert.equal(transaction.events[2].signature, "0x8e04e2f2c246a91202761c435d6a4971bdc7af0617f0c739d900ecd12a6d7266");
+        assert.equal(transaction.events[2].arguments.get('sender'), "0x75d7B75612Ed7A0eDc70ceCED86A9701E8D07D6a");
+        assert.equal(transaction.events[2].arguments.get('btcDestinationAddress'), "mhmWxtqj4oAgLkkyZs3impteLcn7csDuMq");
+        assert.equal(transaction.events[2].arguments.get('amount'), "1000000");
+    });
+})

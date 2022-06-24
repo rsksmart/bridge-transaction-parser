@@ -1,4 +1,5 @@
 import Web3 from "web3";
+import {TransactionReceipt, Transaction as Web3Transaction} from "web3-core";
 
 interface Transaction {
     txHash: string,
@@ -46,3 +47,13 @@ export function getBridgeTransactionsSinceThisBlock(web3Client: Web3, startingBl
  * @returns Object - A transaction object
  */
 export function getBridgeTransactionByTxHash(web3Client: Web3, transactionHash: string, network: string): Promise<Transaction>;
+
+/**
+ * Gets a Bridge Transaction given a bridgeTx: web3TransactionObject and a bridgeTxReceipt: TransactionReceipt.
+ * @param web3Client Web3 Instance
+ * @param bridgeTx The bridgeTx web3TransactionObject.
+ * @param bridgeTxReceipt The bridgeTxReceipt: web3TransactionReceiptObject.
+ * @param network The network.
+ * @returns Object - A transaction object
+ */
+export function decodeBridgeTransaction(web3Client: Web3, bridgeTx: Web3Transaction, bridgeTxReceipt: TransactionReceipt, network: string): Promise<Transaction>;

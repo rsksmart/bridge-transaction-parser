@@ -12,17 +12,8 @@ const getBridgeTransactionByTxHash = async (web3Client, transactionHash, network
     
     if (txReceipt?.to === Bridge.address) {
         const bridge = Bridge.build(web3Client);
-
-        const txData = (await web3Client.eth.getTransaction(txReceipt.transactionHash)).input;
-        const method = bridge._jsonInterface.find(i => i.signature === txData.substr(0, 10));
-        const events = decodeLogs(web3Client, txReceipt, bridge, network);
-
-        let bridgeMethod = '';
-        if (method) {
-            let args = await decodeBridgeMethodParameters(web3Client, method.name, txData);
-            bridgeMethod = new BridgeMethod(method.name, method.signature, args);
-        }
-        transaction = new BridgeTx(txReceipt.transactionHash, bridgeMethod, events, txReceipt.blockNumber);
+        const tx = await web3Client.eth.getTransaction(txReceipt.transactionHash);
+        transaction = await createBridgeTx(web3Client, bridge, tx, txReceipt, network);
     }
     
     return transaction;
@@ -69,6 +60,20 @@ const getBridgeTransactionsSinceThisBlock = async (web3Client, startingBlockHash
 
 }
 
+const decodeBridgeTransaction = async (web3Client, bridgeTx, bridgeTxReceipt, network) => {
+    if (bridgeTx.hash !== bridgeTxReceipt.transactionHash) {
+        throw new Error(`Given bridgeTx(${bridgeTx.hash}) and bridgeTxReceipt(${bridgeTxReceipt.transactionHash}) 
+        should belong to the same transaction.`);
+    }
+
+    if (bridgeTxReceipt?.to !== Bridge.address) {
+        throw new Error(`Given bridgeTxReceipt is not a bridge transaction`);
+    }
+
+    const bridge = Bridge.build(web3Client);
+    return createBridgeTx(web3Client, bridge, bridgeTx, bridgeTxReceipt, network);
+}
+
 const decodeBridgeMethodParameters = (web3Client, methodName, data) => {
     const abi = Bridge.abi.find(m => m.name === methodName);
     if (!abi) {
@@ -86,6 +91,19 @@ const decodeBridgeMethodParameters = (web3Client, methodName, data) => {
 
     return args;
 }
+
+const createBridgeTx = async (web3Client, bridge, tx, txReceipt, network) => {
+    const txData = tx.input;
+    const method = bridge._jsonInterface.find(i => i.signature === txData.substr(0, 10));
+    const events = decodeLogs(web3Client, txReceipt, bridge, network);
+
+    let bridgeMethod = '';
+    if (method) {
+        let args = await decodeBridgeMethodParameters(web3Client, method.name, txData);
+        bridgeMethod = new BridgeMethod(method.name, method.signature, args);
+    }
+    return new BridgeTx(txReceipt.transactionHash, bridgeMethod, events, txReceipt.blockNumber);
+};
 
 const decodeLogs = (web3Client, tx, bridge, network) => {
     const events = [];
@@ -120,5 +138,6 @@ const decodeLogs = (web3Client, tx, bridge, network) => {
 module.exports = {
     getBridgeTransactionsInThisBlock,
     getBridgeTransactionsSinceThisBlock,
-    getBridgeTransactionByTxHash
+    getBridgeTransactionByTxHash,
+    decodeBridgeTransaction
 };
