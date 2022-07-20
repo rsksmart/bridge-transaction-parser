@@ -9,7 +9,7 @@ const blockTransactionParser = require('../index');
 
     const bridgeTx = JSON.parse(process.argv[3]);
     const bridgeTxReceipt = JSON.parse(process.argv[4]);
-    const transaction = await blockTransactionParser.decodeBridgeTransaction(web3Client, bridgeTx, bridgeTxReceipt, network)
+    const transaction = await blockTransactionParser.decodeBridgeTransaction(web3Client, bridgeTx, bridgeTxReceipt)
 
     if (transaction) {
       console.log(JSON.stringify(transaction, null, 2));
