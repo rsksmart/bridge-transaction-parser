@@ -9,7 +9,7 @@ const blockTransactionParser = require('../index');
 
         const blockNumber = process.argv[3];
 
-        const blockTransactions = await blockTransactionParser.getBridgeTransactionsInThisBlock(web3Client, blockNumber, network);
+        const blockTransactions = await blockTransactionParser.getBridgeTransactionsInThisBlock(web3Client, blockNumber);
         if (blockTransactions.length) {
             console.log(JSON.stringify(blockTransactions, null, 2));
         } else {

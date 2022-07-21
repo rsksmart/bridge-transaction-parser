@@ -271,7 +271,7 @@ const dataDecodedResults = [
     {
         data: '0x0000000000000000000000000000000000000000000000000000000000000040',
         decoded: {
-            btcDestinationAddress: '0x18b158a6d893d72092ac9b9f8bbb5bf2c22acf76',
+            btcDestinationAddress: 'mhmWxtqj4oAgLkkyZs3impteLcn7csDuMq',
             amount: '1000000'
         }
     },
@@ -305,7 +305,6 @@ const web3ClientStub = {
 
 let transactionParser;
 let sandbox;
-const network = "testnet";
 
 describe('Get Bridge Transaction By Tx Hash', () => {
 
@@ -326,19 +325,19 @@ describe('Get Bridge Transaction By Tx Hash', () => {
     it('Should Fail For Invalid Transaction Hash', async () => {
         const transactionHash = "0x12345";
 
-        await expect(transactionParser.getBridgeTransactionByTxHash(web3ClientStub, transactionHash, network))
+        await expect(transactionParser.getBridgeTransactionByTxHash(web3ClientStub, transactionHash))
             .to.be.rejectedWith('Hash must be of length 66 starting with "0x"');
     });
 
     it('Should return empty for non Bridge transaction hash', async () => {
         const txReceipt = txReceiptsStub[0];
 
-        await expect(transactionParser.getBridgeTransactionByTxHash(web3ClientStub, txReceipt.transactionHash, network)).to.be.empty;
+        await expect(transactionParser.getBridgeTransactionByTxHash(web3ClientStub, txReceipt.transactionHash)).to.be.empty;
     });
 
     it('Should Verify And Return Bridge Transaction From Tx Hash', async () => {
         let txReceipt = txReceiptsStub[4];
-        let result = await transactionParser.getBridgeTransactionByTxHash(web3ClientStub, txReceipt.transactionHash, network);
+        let result = await transactionParser.getBridgeTransactionByTxHash(web3ClientStub, txReceipt.transactionHash);
 
         assert.equal(result.txHash, txReceipt.transactionHash);
         assert.equal(result.blockNumber, txReceipt.blockNumber);
@@ -384,27 +383,27 @@ describe('Get Bridge Transactions From Single Block', () => {
     it('Should Fail For Invalid Block Number', async () => {
         const blockNumber = 0;
 
-        await expect(transactionParser.getBridgeTransactionsInThisBlock(web3ClientStub, blockNumber, network))
+        await expect(transactionParser.getBridgeTransactionsInThisBlock(web3ClientStub, blockNumber))
             .to.be.rejectedWith('Block number must be greater than 0');
     });
 
     it('Should fail for inexisting block number', async () => {
         const blockNumber = 1000000;
 
-        await expect(transactionParser.getBridgeTransactionsInThisBlock(web3ClientStub, blockNumber, network))
+        await expect(transactionParser.getBridgeTransactionsInThisBlock(web3ClientStub, blockNumber))
             .to.be.rejectedWith(`Block ${blockNumber} not found`);
     });
 
     it('Should return empty for block without Bridge transactions', async () => {
         let block = blocksStub[1];
-        let result = await transactionParser.getBridgeTransactionsInThisBlock(web3ClientStub, block.number, network);
+        let result = await transactionParser.getBridgeTransactionsInThisBlock(web3ClientStub, block.number);
 
         assert.lengthOf(result, 0);
     });
 
     it('Should Verify And Return Bridge Transactions From Block', async () => {
         let block = blocksStub[0];
-        let result = await transactionParser.getBridgeTransactionsInThisBlock(web3ClientStub, block.number, network);
+        let result = await transactionParser.getBridgeTransactionsInThisBlock(web3ClientStub, block.number);
 
         assert.lengthOf(result, 2);
         assert.equal(result[0].txHash, block.transactions[0]);
@@ -431,19 +430,19 @@ describe('Get Bridge Transactions From Multiple Blocks', () => {
     it('Should Fail For Invalid Start Block Number', async () => {
         let startingBlock = 0;
         let blocksToSearch = 5;
-        await expect(transactionParser.getBridgeTransactionsSinceThisBlock(web3ClientStub, startingBlock, blocksToSearch, network))
+        await expect(transactionParser.getBridgeTransactionsSinceThisBlock(web3ClientStub, startingBlock, blocksToSearch))
             .to.be.rejectedWith('Block number must be greater than 0');
 
         startingBlock = 3701647;
         blocksToSearch = 101;
-        await expect(transactionParser.getBridgeTransactionsSinceThisBlock(web3ClientStub, startingBlock, blocksToSearch, network))
+        await expect(transactionParser.getBridgeTransactionsSinceThisBlock(web3ClientStub, startingBlock, blocksToSearch))
             .to.be.rejectedWith('blocksToSearch must be greater than 0 or less than 100');
     });
 
     it('Should Verify And Return Bridge Transactions From Blocks', async () => {
         const startingBlockNumber = 1001;
         const blocksToSearch = 3;
-        let result = await transactionParser.getBridgeTransactionsSinceThisBlock(web3ClientStub, startingBlockNumber, blocksToSearch, network);
+        let result = await transactionParser.getBridgeTransactionsSinceThisBlock(web3ClientStub, startingBlockNumber, blocksToSearch);
 
         assert.lengthOf(result, 3);
         assert.equal(result[0].txHash, blocksStub[0].transactions[0]);
@@ -472,7 +471,7 @@ describe('Gets a Bridge Transaction given a bridgeTx: web3TransactionObject and 
         const bridgeTx = web3ClientStub.eth.getTransaction("0x7a3c39f59e1f2c624602c9b54c28155a251963ec878049c0f78a7d281b2e3b87");
         const bridgeTxReceipt = web3ClientStub.eth.getTransactionReceipt("0x112439355294e02096078c3b77cb12546fe79d284f46d478b3584873c2bacb8b");
 
-        await expect(transactionParser.decodeBridgeTransaction(web3ClientStub, bridgeTx, bridgeTxReceipt, network))
+        await expect(transactionParser.decodeBridgeTransaction(web3ClientStub, bridgeTx, bridgeTxReceipt))
           .to.be.rejectedWith(`Given bridgeTx(${bridgeTx.hash}) and bridgeTxReceipt(${bridgeTxReceipt.transactionHash}) 
         should belong to the same transaction.`);
     });
@@ -481,7 +480,7 @@ describe('Gets a Bridge Transaction given a bridgeTx: web3TransactionObject and 
         const bridgeTx = web3ClientStub.eth.getTransaction("0x6547e88a30d1b43c6fbea07fa7443dfeb697d076495c3e4fc56ebf40228e0431");
         const nonBridgeTxReceipt = web3ClientStub.eth.getTransactionReceipt("0x6547e88a30d1b43c6fbea07fa7443dfeb697d076495c3e4fc56ebf40228e0431");
 
-        await expect(transactionParser.decodeBridgeTransaction(web3ClientStub, bridgeTx, nonBridgeTxReceipt, network))
+        await expect(transactionParser.decodeBridgeTransaction(web3ClientStub, bridgeTx, nonBridgeTxReceipt))
           .to.be.rejectedWith(`Given bridgeTxReceipt is not a bridge transaction`);
     });
 
@@ -490,7 +489,7 @@ describe('Gets a Bridge Transaction given a bridgeTx: web3TransactionObject and 
         const bridgeTx = web3ClientStub.eth.getTransaction("0x73a4d1592c5e922c2c6820985982d2715538717e4b4b52502685bc4c924300b7");
         const bridgeTxReceipt = web3ClientStub.eth.getTransactionReceipt("0x73a4d1592c5e922c2c6820985982d2715538717e4b4b52502685bc4c924300b7");
 
-        const transaction = await transactionParser.decodeBridgeTransaction(web3ClientStub, bridgeTx, bridgeTxReceipt, network)
+        const transaction = await transactionParser.decodeBridgeTransaction(web3ClientStub, bridgeTx, bridgeTxReceipt)
 
         assert.equal(transaction.txHash, bridgeTxReceipt.transactionHash);
         assert.equal(transaction.blockNumber, bridgeTxReceipt.blockNumber);

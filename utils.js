@@ -1,20 +1,3 @@
-const bitcoin = require("bitcoinjs-lib");
-
-const btcAddressFromPublicKeyHash = (pubKeyHash, network) => {
-    return bitcoin.payments.p2pkh({
-        hash: Buffer.from(stripHexPrefix(pubKeyHash), "hex"),
-        network: getNetwork(network),
-    }).address;
-};
-
-const getNetwork = (network) => {
-    return network === "mainnet" ? bitcoin.networks.bitcoin : bitcoin.networks.testnet;
-};
-
-const stripHexPrefix = (str) => {
-    return typeof str === "string" && str.startsWith("0x") ? str.slice(2) : str;
-};
-
 const verifyHashOrBlockNumber = (blockHashOrBlockNumber) => {
     if (typeof blockHashOrBlockNumber === "string" &&
         blockHashOrBlockNumber.indexOf("0x") === 0 &&
@@ -26,6 +9,5 @@ const verifyHashOrBlockNumber = (blockHashOrBlockNumber) => {
 };
 
 module.exports = {
-    btcAddressFromPublicKeyHash,
     verifyHashOrBlockNumber,
 };
