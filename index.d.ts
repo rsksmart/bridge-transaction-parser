@@ -11,13 +11,13 @@ interface Transaction {
 interface BridgeMethod {
     name: string,
     signature: string,
-    arguments: Map<string, unknown>
+    arguments: {}
 }
 
 interface BridgeEvent {
     name: string,
     signature: string,
-    arguments: Map<string, unknown>
+    arguments: {}
 }
 
 /**

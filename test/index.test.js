@@ -348,19 +348,19 @@ describe('Get Bridge Transaction By Tx Hash', () => {
         assert.lengthOf(result.events, 3);
         assert.equal(result.events[0].name, "update_collections");
         assert.equal(result.events[0].signature, "0x1069152f4f916cbf155ee32a695d92258481944edb5b6fd649718fc1b43e515e");
-        assert.equal(result.events[0].arguments.get('sender'), '0xFE90f02331DdF62cb50F5650Dca554b47B37c471');
+        assert.equal(result.events[0].arguments.sender, '0xFE90f02331DdF62cb50F5650Dca554b47B37c471');
 
         assert.equal(result.events[1].name, "release_requested");
         assert.equal(result.events[1].signature, "0x7a7c29481528ac8c2b2e93aee658fddd4dc15304fa723a5c2b88514557bcc790");
-        assert.equal(result.events[1].arguments.get('rskTxHash'), "0x6b735fe7af1819082404d3d05133ceaba3ebfc400cdfd621261285e6b092371f");
-        assert.equal(result.events[1].arguments.get('btcTxHash'), "0x7cbbf9d911d8e76b2a3a4b02a430b39b0b5c3b95f3ee2ca5df1483980d960e0b");
-        assert.equal(result.events[1].arguments.get('amount'), "1011610");
+        assert.equal(result.events[1].arguments.rskTxHash, "0x6b735fe7af1819082404d3d05133ceaba3ebfc400cdfd621261285e6b092371f");
+        assert.equal(result.events[1].arguments.btcTxHash, "0x7cbbf9d911d8e76b2a3a4b02a430b39b0b5c3b95f3ee2ca5df1483980d960e0b");
+        assert.equal(result.events[1].arguments.amount, "1011610");
 
         assert.equal(result.events[2].name, "release_request_received");
         assert.equal(result.events[2].signature, "0x8e04e2f2c246a91202761c435d6a4971bdc7af0617f0c739d900ecd12a6d7266");
-        assert.equal(result.events[2].arguments.get('sender'), "0x75d7B75612Ed7A0eDc70ceCED86A9701E8D07D6a");
-        assert.equal(result.events[2].arguments.get('btcDestinationAddress'), "mhmWxtqj4oAgLkkyZs3impteLcn7csDuMq");
-        assert.equal(result.events[2].arguments.get('amount'), "1000000");
+        assert.equal(result.events[2].arguments.sender, "0x75d7B75612Ed7A0eDc70ceCED86A9701E8D07D6a");
+        assert.equal(result.events[2].arguments.btcDestinationAddress, "mhmWxtqj4oAgLkkyZs3impteLcn7csDuMq");
+        assert.equal(result.events[2].arguments.amount, "1000000");
     });
 })
 
@@ -500,18 +500,18 @@ describe('Gets a Bridge Transaction given a bridgeTx: web3TransactionObject and 
         assert.lengthOf(transaction.events, 3);
         assert.equal(transaction.events[0].name, "update_collections");
         assert.equal(transaction.events[0].signature, "0x1069152f4f916cbf155ee32a695d92258481944edb5b6fd649718fc1b43e515e");
-        assert.equal(transaction.events[0].arguments.get('sender'), '0xFE90f02331DdF62cb50F5650Dca554b47B37c471');
+        assert.equal(transaction.events[0].arguments.sender, '0xFE90f02331DdF62cb50F5650Dca554b47B37c471');
 
         assert.equal(transaction.events[1].name, "release_requested");
         assert.equal(transaction.events[1].signature, "0x7a7c29481528ac8c2b2e93aee658fddd4dc15304fa723a5c2b88514557bcc790");
-        assert.equal(transaction.events[1].arguments.get('rskTxHash'), "0x6b735fe7af1819082404d3d05133ceaba3ebfc400cdfd621261285e6b092371f");
-        assert.equal(transaction.events[1].arguments.get('btcTxHash'), "0x7cbbf9d911d8e76b2a3a4b02a430b39b0b5c3b95f3ee2ca5df1483980d960e0b");
-        assert.equal(transaction.events[1].arguments.get('amount'), "1011610");
+        assert.equal(transaction.events[1].arguments.rskTxHash, "0x6b735fe7af1819082404d3d05133ceaba3ebfc400cdfd621261285e6b092371f");
+        assert.equal(transaction.events[1].arguments.btcTxHash, "0x7cbbf9d911d8e76b2a3a4b02a430b39b0b5c3b95f3ee2ca5df1483980d960e0b");
+        assert.equal(transaction.events[1].arguments.amount, "1011610");
 
         assert.equal(transaction.events[2].name, "release_request_received");
         assert.equal(transaction.events[2].signature, "0x8e04e2f2c246a91202761c435d6a4971bdc7af0617f0c739d900ecd12a6d7266");
-        assert.equal(transaction.events[2].arguments.get('sender'), "0x75d7B75612Ed7A0eDc70ceCED86A9701E8D07D6a");
-        assert.equal(transaction.events[2].arguments.get('btcDestinationAddress'), "mhmWxtqj4oAgLkkyZs3impteLcn7csDuMq");
-        assert.equal(transaction.events[2].arguments.get('amount'), "1000000");
+        assert.equal(transaction.events[2].arguments.sender, "0x75d7B75612Ed7A0eDc70ceCED86A9701E8D07D6a");
+        assert.equal(transaction.events[2].arguments.btcDestinationAddress, "mhmWxtqj4oAgLkkyZs3impteLcn7csDuMq");
+        assert.equal(transaction.events[2].arguments.amount, "1000000");
     });
 })

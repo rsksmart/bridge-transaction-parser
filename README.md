@@ -12,7 +12,7 @@ This is a beta version until audited by the security team. Any comments or sugge
 ## Run console tool:
 - `node tool/bridge-transaction-txHash.js $network $txHash`
 - `node tool/bridge-transactions-single-block.js $network $blockHashOrBlockNumber`
-- `node tool/bridge-transactions-multiple-block.js $network $startingBlockHashOrBlockNumber $blocksToSearch`
+- `node tool/bridge-transactions-multiple-blocks.js $network $startingBlockHashOrBlockNumber $blocksToSearch`
 - `node tool/bridge-transaction-decoder.js $network $bridgeTx $bridgeTxReceipt`
 
 
