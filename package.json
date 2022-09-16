@@ -7,8 +7,7 @@
     "test": "nyc mocha --timeout 10000"
   },
   "dependencies": {
-    "@rsksmart/rsk-precompiled-abis": "https://github.com/rsksmart/precompiled-abis",
-    "bitcoinjs-lib": "^6.0.1"
+    "@rsksmart/rsk-precompiled-abis": "https://github.com/rsksmart/precompiled-abis"
   },
   "author": "",
   "license": "MIT",
