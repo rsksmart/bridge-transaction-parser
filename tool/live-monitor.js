@@ -2,7 +2,6 @@ const Web3 = require('web3');
 const { getBridgeTransactionByTxHash } = require('../index');
 const networkParser = require('./network-parser');
 const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
-console.log("Bridge.address: ", Bridge.address);
 const util = require('util');
 
 const DEFAULT_CHECK_EVERY_MILLIS = 1_000;
@@ -106,7 +105,7 @@ async function monitor() {
 
         currentBlockNumber++;
 
-        for(transaction of block.transactions) {
+        for(const transaction of block.transactions) {
             
             if(transaction.to === Bridge.address) {
 
@@ -145,7 +144,7 @@ async function monitor() {
 
                 console.info("Found a tx:");
 
-                console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}))
+                console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
 
             }
 
