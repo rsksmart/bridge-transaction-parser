@@ -6,7 +6,7 @@ const util = require('util');
 
 const DEFAULT_CHECK_EVERY_MILLIS = 1_000;
 
-const defaultCommandsValues = {
+const defaultParamsValues = {
     fromBlock: 'latest',
     methods: [],
     events: [],
@@ -16,26 +16,27 @@ const defaultCommandsValues = {
     checkEveryMillis: DEFAULT_CHECK_EVERY_MILLIS,
 };
 
-const getParsedCommands = () => {
-    const commands = process.argv.filter(command => command.startsWith('--'))
-    .reduce((commands, command) => {
-        if(command.startsWith('--fromblock')) {
-            commands.fromBlock = command.slice(command.indexOf('=') + 1);
-        } else if(command.startsWith('--methods') || command.startsWith('--events')) { // Parsing commands that include an array
-            commands['methods'] = JSON.parse(command.slice(command.indexOf('=') + 1).replaceAll("'", '"'));
-        } else if(command.startsWith('--network')) {
-            commands.network = command.slice(command.indexOf('=') + 1);
-        } else if(command.startsWith('--pegout') || command.startsWith('--pegin')) {
-            const parsedCommand = command.replace('--', '');
-            commands[parsedCommand] = true;
-        } else if(command.startsWith('--checkeverymillis')) {
-            commands.checkEveryMillis = Number(command.slice(command.indexOf('=') + 1));
+const getParsedParams = () => {
+    const params = process.argv.filter(param => param.startsWith('--'))
+    .reduce((params, param) => {
+        if(param.startsWith('--fromblock')) {
+            params.fromBlock = param.slice(param.indexOf('=') + 1);
+        } else if(param.startsWith('--methods') || param.startsWith('--events')) { // Parsing params that include an array
+            const paramName = param.slice(2, param.indexOf('='));
+            params[paramName] = JSON.parse(param.slice(param.indexOf('=') + 1).replaceAll("'", '"'));
+        } else if(param.startsWith('--network')) {
+            params.network = param.slice(param.indexOf('=') + 1);
+        } else if(param.startsWith('--pegout') || param.startsWith('--pegin')) {
+            const paramName = param.replace('--', '');
+            params[paramName] = true;
+        } else if(param.startsWith('--checkeverymillis')) {
+            params.checkEveryMillis = Number(param.slice(param.indexOf('=') + 1));
         } else {
-            throw new Error(`Command '${command}' not recognized`);
+            throw new Error(`Parameter '${param}' not recognized`);
         }
-        return commands;
-    }, defaultCommandsValues);
-    return commands;
+        return params;
+    }, defaultParamsValues);
+    return params;
 };
 
 const PEGOUT_METHOD_SIGNATURES = {
@@ -65,17 +66,18 @@ function isAPeginRelatedTransactionData(data) {
     const methodSignature = data.slice(0, 10);
     switch(methodSignature) {
         case PEGIN_METHOD_SIGNATURES.registerBtcTransaction:
+        case PEGIN_METHOD_SIGNATURES.registerBtcCoinbaseTransaction:
             return true;
         default:
             return false;
     }
 }
 
-const commands = getParsedCommands();
+const params = getParsedParams();
 
-const web3Client = new Web3(networkParser(commands.network));
+const web3Client = new Web3(networkParser(params.network));
 
-let currentBlockNumber = commands.fromBlock;
+let currentBlockNumber = params.fromBlock;
 
 let notified = false;
 
@@ -109,26 +111,29 @@ async function monitor() {
             
             if(transaction.to === Bridge.address) {
 
+                const isPeginRelated = isAPeginRelatedTransactionData(transaction.input);
+                const isPegoutRelated = isAPegoutRelatedTransactionData(transaction.input);
+
                 // Requested only pegouts, if tx is not a pegout then continue
-                if(!commands.pegin && commands.pegout && !isAPegoutRelatedTransactionData(transaction.input)) {
+                if(!params.pegin && (params.pegout && !isPegoutRelated)) {
                     continue;
                 // Requested only pegins, if tx is not a pegin then return
-                } else if(!commands.pegout && commands.pegin && !isAPeginRelatedTransactionData(transaction.input)) {
+                } else if(!params.pegout && (params.pegin && !isPeginRelated)) {
                     continue;
                 // Requested only pegins and pegouts, if tx is not a pegin or pegout then return
-                } else if(commands.pegin && commands.pegout && (!isAPeginRelatedTransactionData(transaction.input) || !isAPegoutRelatedTransactionData(transaction.input))) {
+                } else if((params.pegin && !isPeginRelated) || (params.pegout && !isPegoutRelated)) {
                     continue;
                 }
-                // Showing all bridge events by default if commands.pegin and commands.pegout where not specified
+                // Showing all bridge events by default if params.pegin and params.pegout where not specified
         
                 const rskTx = await getBridgeTransactionByTxHash(web3Client, transaction.hash);
 
-                if(commands.methods.length > 0 && !commands.methods.includes(rskTx.method.name)) {
+                if(params.methods.length > 0 && !params.methods.includes(rskTx.method.name)) {
                     continue;
                 }
 
-                const containsAtLeast1RequestedEvent = rskTx.events.some(event => commands.events.includes(event.name));
-                if(commands.events.length > 0 && containsAtLeast1RequestedEvent) {
+                const containsAtLeast1RequestedEvent = rskTx.events.some(event => params.events.includes(event.name));
+                if(params.events.length > 0 && containsAtLeast1RequestedEvent) {
                     continue;
                 }
 
@@ -157,7 +162,7 @@ async function monitor() {
     
 }
 
-const checkEveryMillis = commands.checkEveryMillis || DEFAULT_CHECK_EVERY_MILLIS;
+const checkEveryMillis = params.checkEveryMillis || DEFAULT_CHECK_EVERY_MILLIS;
 
 console.log(`Checking a block every ${checkEveryMillis} milliseconds`);
 
