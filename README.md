@@ -87,50 +87,37 @@ Available param options:
 
 * [--fromblock=number] defaults to `lastest`
 * [--network=network] defaults to `testnet`
-* [--pegin] if provided, prints pegin related transactions. It can be used along `--pegout` to only print pegin and pegout related transactions
-* [--pegin] if provided, prints pegout related transactions  It can be used along `--pegin` to only print pegin and pegout related transactions
-* [--methods="['bridgeMethod1', 'bridgeMethod2']"] if provided, it will only print transaction data that were sent to any of the specified bridge methods. Defaults to an empty array and all transactions with any methods are printed
-* [--events="['bridgeEvent1', 'bridgeEvent2']"] if provided, it will only print transaction data whose list of events contains at least one of these events
-* [--checkeverymillis=timeInMilliseconds] if provided, tries to get the next block to filter and print the transaction data. Defaults to 1000 milliseconds
+* [--pegin] if provided, prints peg-in related transactions. It can be used along `--pegout` to only print peg-in and peg-out related transactions
+* [--pegin] if provided, prints peg-out related transactions  It can be used along `--pegin` to only print peg-in and peg-out related transactions
+* [--methods="['bridgeMethod1', 'bridgeMethod2']"] prints transaction data of calls made to any of the specified bridge methods. Defaults to all Bridge methods
+* [--events="['bridgeEvent1', 'bridgeEvent2']"] prints transaction data of those that emitted any of these events. Defaults to all Bridge events
+* [--checkeverymillis=timeInMilliseconds] time between executions to get the next block to filter and print the transactions data. Defaults to 1000 milliseconds
 
-Note: these parameters can be provided in any order. All the parameters are optional.
+### Samples
 
-The comamnd `node tool/live-monitor.js` uses a default configuration that looks like this:
+Note: All the options are optional and can be provided in any order
 
-```js
-const DEFAULT_CHECK_EVERY_MILLIS = 1_000;
-const defaultParamsValues = {
-    fromBlock: 'latest',
-    methods: [],
-    events: [],
-    pegout: false,
-    pegin: false,
-    network: 'testnet',
-    checkEveryMillis: DEFAULT_CHECK_EVERY_MILLIS,
-};
-```
-
-The following command will start printing all bridge events starting at block `3,574,944 ` in `testnet`:
+Print all Bridge methods and events related transaction data starting at block `3,573,827` in `testnet`:
 
 > node tool/live-monitor.js --fromblock=3574944 
 
-Print all the pegout related transaction data from block `3,574,944 ` in a local node at `http://127.0.0.1:30007`:
+Print all the peg-out related transaction data from block `3,574,944 ` in a local node at `http://127.0.0.1:30007`:
 
 > node tool/live-monitor.js --fromblock=3574944  --pegout --network=http://127.0.0.1:30007
 
-Print all the transaction data that only have the `addSignature` method starting at the latest block in `testnet`:
+Print all the transaction data that only has the `addSignature` method starting at the latest block in `testnet`:
 
 > node tool/live-monitor.js --methods="['addSignature']"
 
-Print all the transaction data only related to pegin and pegouts:
+Print all the transaction data only related to peg-ins and peg-outs in testnet:
 
 > node tool/live-monitor.js --pegin --pegout
 
-Only print pegin related transaction data from block `3,575,114`:
+Only print peg-in related transaction data in testnet from block `3,575,114`:
 
 > node tool/live-monitor.js --fromblock=3575114 --pegin
 
-> Only print pegout related transaction data:
+Only print peg-out related transaction data in testnet:
 
 > node tool/live-monitor.js --pegout
 
@@ -142,6 +129,4 @@ Only print the transaction data that contains the `updateCollections` method and
 
 > node tool/live-monitor.js --fromblock=500 --methods="['updateCollections']" --events="['release_requested']" --network=http://127.0.0.1:30007 --checkeverymillis=60000
 
-And so on. Just make sure that the combination of parameters make sense. For example, don't request all `--pegin` transaction data with `--methods="['addSignature']"` because that wouldn't make sense and the tool would not print anything because the `addSignature` bridge method is not related to pegins but to pegouts.
-
-If an unknown command parameter is passed, the tool will throw an exception.
+If an unknown option parameter is passed, the tool will throw an exception.

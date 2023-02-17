@@ -48,6 +48,7 @@ const PEGOUT_METHOD_SIGNATURES = {
 const PEGIN_METHOD_SIGNATURES = {
     registerBtcCoinbaseTransaction: '0xccf417ae',
     registerBtcTransaction: '0x43dc0656',
+    registerFastBridgeBtcTransaction: '0x6adc0133'
 };
 
 function isAPegoutRelatedTransactionData(data) {
