@@ -25,7 +25,7 @@ This is a beta version until audited by the security team. Any comments or sugge
 
 ## Live monitoring tool
 
-The live monitoring tool enables real time monitoring or a given set of Bridge related events and methods.
+The live monitoring tool enables real-time monitoring of a given set of Bridge related events and methods.
 
 This tool can be helpful to track peg-ins, peg-outs or any other specific bridge action in real time.
 
@@ -88,7 +88,7 @@ Available param options:
 * [--fromblock=number] defaults to `lastest`
 * [--network=network] defaults to `testnet`
 * [--pegin] if provided, prints peg-in related transactions. It can be used along `--pegout` to only print peg-in and peg-out related transactions
-* [--pegin] if provided, prints peg-out related transactions  It can be used along `--pegin` to only print peg-in and peg-out related transactions
+* [--pegout] if provided, prints peg-out related transactions  It can be used along `--pegin` to only print peg-in and peg-out related transactions
 * [--methods="['bridgeMethod1', 'bridgeMethod2']"] prints transaction data of calls made to any of the specified bridge methods. Defaults to all Bridge methods
 * [--events="['bridgeEvent1', 'bridgeEvent2']"] prints transaction data of those that emitted any of these events. Defaults to all Bridge events
 * [--checkeverymillis=timeInMilliseconds] time between executions to get the next block to filter and print the transactions data. Defaults to 1000 milliseconds

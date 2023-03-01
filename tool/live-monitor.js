@@ -53,25 +53,14 @@ const PEGIN_METHOD_SIGNATURES = {
 
 function isAPegoutRelatedTransactionData(data) {
     const methodSignature = data.slice(0, 10);
-    switch(methodSignature) {
-        case PEGOUT_METHOD_SIGNATURES.releaseBtc:
-        case PEGOUT_METHOD_SIGNATURES.updateCollections:
-        case PEGOUT_METHOD_SIGNATURES.addSignature:
-            return true;
-        default:
-            return false;
-    }
+    return Object.values(PEGOUT_METHOD_SIGNATURES)
+            .includes(methodSignature);
 }
 
 function isAPeginRelatedTransactionData(data) {
     const methodSignature = data.slice(0, 10);
-    switch(methodSignature) {
-        case PEGIN_METHOD_SIGNATURES.registerBtcTransaction:
-        case PEGIN_METHOD_SIGNATURES.registerBtcCoinbaseTransaction:
-            return true;
-        default:
-            return false;
-    }
+    return Object.values(PEGIN_METHOD_SIGNATURES)
+            .includes(methodSignature);
 }
 
 const params = getParsedParams();
