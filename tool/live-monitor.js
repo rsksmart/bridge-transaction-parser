@@ -111,9 +111,10 @@ async function monitor() {
                 } else if(!params.pegout && (params.pegin && !isPeginRelated)) {
                     continue;
                 // Requested only pegins and pegouts, if tx is not a pegin or pegout then return
-                } else if((params.pegin && !isPeginRelated) || (params.pegout && !isPegoutRelated)) {
+                } else if((params.pegin && params.pegout) && (!isPeginRelated && !isPegoutRelated)) {
                     continue;
                 }
+
                 // Showing all bridge events by default if params.pegin and params.pegout where not specified
         
                 const rskTx = await getBridgeTransactionByTxHash(web3Client, transaction.hash);
