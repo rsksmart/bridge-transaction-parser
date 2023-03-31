@@ -124,7 +124,7 @@ async function monitor() {
                 }
 
                 const containsAtLeast1RequestedEvent = rskTx.events.some(event => params.events.includes(event.name));
-                if(params.events.length > 0 && containsAtLeast1RequestedEvent) {
+                if(params.events.length > 0 && !containsAtLeast1RequestedEvent) {
                     continue;
                 }
 
