@@ -117,6 +117,17 @@ class LiveMonitor extends EventEmitter {
     }
 
     start(params) {
+
+        if(!this.rskClient) {
+            this.emit(MONITOR_EVENTS.error, 'RSK client not provided. Exiting...');
+            return;
+        }
+
+        if(!this.params) {
+            this.emit(MONITOR_EVENTS.error, 'Params not provided. Exiting...');
+            return;
+        }
+
         this.setParams(params);
         if(this.timer) {
             this.emit(MONITOR_EVENTS.error, 'Live monitor already started');
