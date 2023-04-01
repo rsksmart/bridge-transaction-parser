@@ -139,10 +139,11 @@ class LiveMonitor extends EventEmitter {
     stop() {
         if(this.timer) {
             clearTimeout(this.timer);
+            this.timer = null;
         }
         this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped');
     }
-    
+
 }
 
 module.exports = LiveMonitor;
