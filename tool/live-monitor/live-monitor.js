@@ -1,7 +1,7 @@
 const { getBridgeTransactionByTxHash } = require('../../index');
 const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
 const EventEmitter = require('node:events');
-const { MONITOR_EVENTS, defaultParamsValues, DEFAULT_CHECK_EVERY_MILLIS } = require('./live-monitor-utils');
+const { MONITOR_EVENTS, defaultParamsValues } = require('./live-monitor-utils');
 
 const PEGOUT_METHOD_SIGNATURES = {
     releaseBtc: '0x',
@@ -35,6 +35,10 @@ class LiveMonitor extends EventEmitter {
         this.currentBlockNumber = params.fromBlock;
         this.notified = false;
         this.timer = null;
+        this.latestBlockNumber = null;
+        this.isStarted = false;
+        this.isStopped = false;
+        this.isReset = false;
     }
 
     async check() {
@@ -111,29 +115,35 @@ class LiveMonitor extends EventEmitter {
         }
     }
 
-    async start() {
+    start() {
         if(this.timer) {
             this.emit(MONITOR_EVENTS.error, 'Live monitor already started');
             return;
         }
-        this.emit(MONITOR_EVENTS.started, 'Live monitor started');
+       
+        const setup = async () => {
+            this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
 
-        this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
-
-        if(this.currentBlockNumber === 'latest') {
-            this.currentBlockNumber = this.latestBlockNumber;
-        } else if(this.currentBlockNumber < 0) {
-            // If the block number is negative, it will be interpreted as the number of blocks before the latest block
-            this.currentBlockNumber = this.latestBlockNumber - currentBlockNumber;
-        }
-        
-        this.timer = setInterval(async () => {
-            // If the current block number is greater than the latest block number, then we need to update the latest block number
-            if(this.currentBlockNumber > this.latestBlockNumber) {
-                this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
+            if(this.currentBlockNumber === 'latest') {
+                this.currentBlockNumber = this.latestBlockNumber;
+            } else if(this.currentBlockNumber < 0) {
+                // If the block number is negative, it will be interpreted as the number of blocks before the latest block
+                this.currentBlockNumber = this.latestBlockNumber - currentBlockNumber;
             }
-            this.check();
-        }, this.params.checkEveryMilliseconds);
+            this.isStarted = true;
+            this.isStopped = false;
+            this.emit(MONITOR_EVENTS.started, 'Live monitor started');
+            this.timer = setInterval(async () => {
+                // If the current block number is greater than the latest block number, then we need to update the latest block number
+                if(this.currentBlockNumber > this.latestBlockNumber) {
+                    this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
+                }
+                this.check();
+            }, this.params.checkEveryMilliseconds);
+        }
+
+        setup();
+
         return this;
     }
 
@@ -142,6 +152,8 @@ class LiveMonitor extends EventEmitter {
             clearTimeout(this.timer);
             this.timer = null;
         }
+        this.isStarted = false;
+        this.hasStopped = true;
         this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped');
         return this;
     }
@@ -151,8 +163,23 @@ class LiveMonitor extends EventEmitter {
         this.currentBlockNumber = this.params.fromBlock;
         this.start();
         this.emit(MONITOR_EVENTS.reset, 'Live monitor reset');
+        this.hasReset = true;
         return this;
-    }   
+    }
+
+    setParams(params) {
+        this.stop();
+        this.params = { ...this.params, ...params };
+        this.start();
+        return this;
+    }
+
+    setWeb3Client(rskClient) {
+        this.stop();
+        this.rskClient = rskClient;
+        this.start();
+        return this;
+    }
 
 }
 

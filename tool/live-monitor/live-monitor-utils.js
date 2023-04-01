@@ -18,6 +18,7 @@ const defaultParamsValues = {
     pegin: false,
     network: 'testnet',
     checkEveryMilliseconds: DEFAULT_CHECK_EVERY_MILLIS,
+    keepTryingOnError: true,
 };
 
 module.exports = {

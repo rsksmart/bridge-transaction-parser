@@ -30,6 +30,7 @@ export interface BridgeTxDetails {
     to: string;
     method: BridgeMethod;
     events: BridgeEvent[];
+    keepTryingOnError: boolean;
 }
 
 export default class LiveMonitor {
@@ -40,8 +41,13 @@ export default class LiveMonitor {
     on(event: 'started', listener: (message: string) => void): this;
     on(event: 'error', listener: (errorMessage: string) => void): this;
     on(event: 'stopped', listener: (message: string) => void): this;
+    setParams(params: LiveMonitorParam): this;
+    setWeb3Client(rskClient: Web3): this;
     start(): this;
     stop(): this;
     reset(): this;
     check(): this;
+    isStarted: boolean;
+    isStopped: boolean;
+    isReset: boolean;
 }
