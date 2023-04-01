@@ -160,8 +160,9 @@ class LiveMonitor extends EventEmitter {
         return this;
     }
 
-    reset() {
+    reset(params) {
         this.stop();
+        this.setParams(params);
         this.currentBlockNumber = this.params.fromBlock;
         this.start();
         this.emit(MONITOR_EVENTS.reset, 'Live monitor reset');
