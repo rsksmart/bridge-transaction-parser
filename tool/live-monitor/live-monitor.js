@@ -134,6 +134,7 @@ class LiveMonitor extends EventEmitter {
             }
             this.check();
         }, this.params.checkEveryMilliseconds);
+        return this;
     }
 
     stop() {
@@ -142,6 +143,7 @@ class LiveMonitor extends EventEmitter {
             this.timer = null;
         }
         this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped');
+        return this;
     }
 
     reset() {
@@ -149,6 +151,7 @@ class LiveMonitor extends EventEmitter {
         this.currentBlockNumber = this.params.fromBlock;
         this.start();
         this.emit(MONITOR_EVENTS.reset, 'Live monitor reset');
+        return this;
     }   
 
 }

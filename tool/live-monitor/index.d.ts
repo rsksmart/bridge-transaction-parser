@@ -40,8 +40,8 @@ export default class LiveMonitor {
     on(event: 'started', listener: (message: string) => void): this;
     on(event: 'error', listener: (errorMessage: string) => void): this;
     on(event: 'stopped', listener: (message: string) => void): this;
-    start(): void;
-    stop(): void;
-    reset(): void;
-    check(): void;
+    start(): this;
+    stop(): this;
+    reset(): this;
+    check(): this;
 }
