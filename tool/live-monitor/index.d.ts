@@ -42,5 +42,6 @@ export default class LiveMonitor {
     on(event: 'stopped', listener: (message: string) => void): this;
     start(): void;
     stop(): void;
+    reset(): void;
     check(): void;
 }

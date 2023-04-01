@@ -144,6 +144,13 @@ class LiveMonitor extends EventEmitter {
         this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped');
     }
 
+    reset() {
+        this.stop();
+        this.currentBlockNumber = this.params.fromBlock;
+        this.start();
+        this.emit(MONITOR_EVENTS.reset, 'Live monitor reset');
+    }   
+
 }
 
 module.exports = LiveMonitor;

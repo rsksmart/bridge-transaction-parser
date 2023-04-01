@@ -7,6 +7,7 @@ const MONITOR_EVENTS = {
     error: 'error',
     stopped: 'stopped',
     started: 'started',
+    reset: 'reset',
 };
 
 const defaultParamsValues = {
