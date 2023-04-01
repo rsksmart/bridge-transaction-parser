@@ -2,6 +2,7 @@ const { getBridgeTransactionByTxHash } = require('../../index');
 const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
 const EventEmitter = require('node:events');
 const { MONITOR_EVENTS, defaultParamsValues } = require('./live-monitor-utils');
+const Web3 = require('web3');
 
 const PEGOUT_METHOD_SIGNATURES = {
     releaseBtc: '0x',
@@ -28,10 +29,9 @@ const isAPeginRelatedTransactionData = (data) => {
 };
 
 class LiveMonitor extends EventEmitter {
-    constructor(rskClient, params = {},) {
+    constructor(params = {}) {
         super();
         this.params = { ...defaultParamsValues, ...params };
-        this.rskClient = rskClient;
         this.currentBlockNumber = params.fromBlock;
         this.notified = false;
         this.timer = null;
@@ -39,6 +39,9 @@ class LiveMonitor extends EventEmitter {
         this.isStarted = false;
         this.isStopped = false;
         this.isReset = false;
+        if(params.network) {
+            this.rskClient = new Web3(params.network);
+        }
     }
 
     async check() {
@@ -118,22 +121,30 @@ class LiveMonitor extends EventEmitter {
 
     start(params) {
 
-        if(!this.rskClient) {
-            this.emit(MONITOR_EVENTS.error, 'RSK client not provided. Exiting...');
+        if(this.timer || this.isStarted) {
+            this.emit(MONITOR_EVENTS.error, 'Live monitor already started');
             return;
         }
+        
+        if(params) {
+            const network = params.network;
+            if(network && network !== this.params.network) {
+                this.rskClient = new Web3(network);
+            }
+        }
+
+        this.setParams(params);
 
         if(!this.params) {
             this.emit(MONITOR_EVENTS.error, 'Params not provided. Exiting...');
             return;
         }
 
-        this.setParams(params);
-        if(this.timer) {
-            this.emit(MONITOR_EVENTS.error, 'Live monitor already started');
+        if(!this.params.network) {
+            this.emit(MONITOR_EVENTS.error, 'Network not provided. Exiting...');
             return;
         }
-       
+
         const setup = async () => {
             this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
 
@@ -188,10 +199,9 @@ class LiveMonitor extends EventEmitter {
         return this;
     }
 
-    setWeb3Client(rskClient) {
-        this.stop();
-        this.rskClient = rskClient;
-        this.start();
+    setNetwork(network) {
+        this.params.network = network;
+        this.rskClient = new Web3(network);
         return this;
     }
 

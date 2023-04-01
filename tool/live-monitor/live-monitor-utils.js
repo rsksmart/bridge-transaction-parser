@@ -16,7 +16,7 @@ const defaultParamsValues = {
     events: [],
     pegout: false,
     pegin: false,
-    network: 'testnet',
+    network: 'https://public-node.testnet.rsk.co/',
     checkEveryMilliseconds: DEFAULT_CHECK_EVERY_MILLIS,
     keepTryingOnError: true,
 };

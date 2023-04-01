@@ -1,4 +1,3 @@
-const Web3 = require('web3');
 const LiveMonitor = require('./live-monitor');
 const util = require('util');
 const { defaultParamsValues, DEFAULT_CHECK_EVERY_MILLIS, MONITOR_EVENTS } = require('./live-monitor-utils');
@@ -29,9 +28,11 @@ const getParsedParams = () => {
 
 const params = getParsedParams();
 
-const web3Client = new Web3(networkParser(params.network));
+if(!params.network) {
+    params.network = networkParser('testnet');
+}
 
-const monitor = new LiveMonitor(web3Client, params);
+const monitor = new LiveMonitor(params);
 
 monitor.on(MONITOR_EVENTS.stopped, () => {
     console.info("Monitor stopped");
