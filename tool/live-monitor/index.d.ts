@@ -46,7 +46,7 @@ export default class LiveMonitor {
     setWeb3Client(rskClient: Web3): this;
     start(params?: LiveMonitorParam): this;
     stop(): this;
-    reset(): this;
+    reset(params?: LiveMonitorParam): this;
     check(): this;
     isStarted: boolean;
     isStopped: boolean;
