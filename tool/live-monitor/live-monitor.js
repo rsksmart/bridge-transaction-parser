@@ -28,7 +28,7 @@ const isAPeginRelatedTransactionData = (data) => {
 };
 
 class LiveMonitor extends EventEmitter {
-    constructor(params, rskClient) {
+    constructor(rskClient, params = {},) {
         super();
         this.params = { ...defaultParamsValues, ...params };
         this.rskClient = rskClient;
@@ -116,7 +116,8 @@ class LiveMonitor extends EventEmitter {
         }
     }
 
-    start() {
+    start(params) {
+        this.setParams(params);
         if(this.timer) {
             this.emit(MONITOR_EVENTS.error, 'Live monitor already started');
             return;
@@ -169,9 +170,9 @@ class LiveMonitor extends EventEmitter {
     }
 
     setParams(params) {
-        this.stop();
-        this.params = { ...this.params, ...params };
-        this.start();
+        if(params) {
+            this.params = { ...this.params, ...params };
+        }
         return this;
     }
 

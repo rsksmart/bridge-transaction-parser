@@ -31,7 +31,7 @@ const params = getParsedParams();
 
 const web3Client = new Web3(networkParser(params.network));
 
-const monitor = new LiveMonitor(params, web3Client);
+const monitor = new LiveMonitor(web3Client, params);
 
 monitor.on(MONITOR_EVENTS.stopped, () => {
     console.info("Monitor stopped");

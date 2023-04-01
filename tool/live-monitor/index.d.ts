@@ -35,7 +35,7 @@ export interface BridgeTxDetails {
 }
 
 export default class LiveMonitor {
-    constructor(params: LiveMonitorParam, rskClient: Web3);
+    constructor(rskClient: Web3, params?: LiveMonitorParam,);
     on(event: 'checkingBlock', listener: (blockNumber: number) => void): this;
     on(event: 'filterMatched', listener: (bridgeTx: BridgeTxDetails) => void): this;
     on(event: 'latestBlockReached', listener: (message: string) => void): this;
@@ -44,7 +44,7 @@ export default class LiveMonitor {
     on(event: 'stopped', listener: (message: string) => void): this;
     setParams(params: LiveMonitorParam): this;
     setWeb3Client(rskClient: Web3): this;
-    start(): this;
+    start(params?: LiveMonitorParam): this;
     stop(): this;
     reset(): this;
     check(): this;
