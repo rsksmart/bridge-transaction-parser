@@ -1,7 +1,7 @@
 import Web3 from 'web3';
 
 export interface LiveMonitorParam {
-    fromBlock?: 'latest' | 'number';
+    fromBlock: string | number;
     methods: string[];
     events: string[];
     pegout: boolean;
