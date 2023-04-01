@@ -31,6 +31,7 @@ export interface BridgeTxDetails {
     method: BridgeMethod;
     events: BridgeEvent[];
     keepTryingOnError: boolean;
+    timestamp: number;
 }
 
 export default class LiveMonitor {

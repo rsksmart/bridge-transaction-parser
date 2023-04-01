@@ -99,7 +99,8 @@ class LiveMonitor extends EventEmitter {
                         from: transaction.from,
                         to: transaction.to,
                         method: rskTx.method,
-                        events: rskTx.events
+                        events: rskTx.events,
+                        timestamp: block.timestamp,
                     };
     
                     this.emit(MONITOR_EVENTS.filterMatched, bridgeTxDetails);
