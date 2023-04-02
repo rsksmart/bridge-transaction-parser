@@ -1,4 +1,4 @@
-const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
+const Bridge = require('@rsksmart/hop-rsk-precompiled-abis').bridge;
 const BridgeTx = require("./BridgeTx");
 const BridgeMethod = require("./BridgeMethod");
 const BridgeEvent = require("./BridgeEvent");
@@ -107,6 +107,7 @@ const createBridgeTx = async (web3Client, bridge, tx, txReceipt) => {
 const decodeLogs = (web3Client, tx, bridge) => {
     const events = [];
     for (let txLog of tx.logs) {
+        console.log('txLog: ', txLog)
         let bridgeEvent = bridge._jsonInterface.find(i => i.signature === txLog.topics[0]);
         
         if (bridgeEvent) {

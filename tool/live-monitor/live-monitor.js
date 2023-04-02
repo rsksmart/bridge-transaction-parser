@@ -1,5 +1,5 @@
 const { getBridgeTransactionByTxHash } = require('../../index');
-const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
+const Bridge = require('@rsksmart/hop-rsk-precompiled-abis').bridge;
 const EventEmitter = require('node:events');
 const { MONITOR_EVENTS, defaultParamsValues } = require('./live-monitor-utils');
 const Web3 = require('web3');
