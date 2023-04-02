@@ -150,10 +150,15 @@ class LiveMonitor extends EventEmitter {
 
             if(this.currentBlockNumber === 'latest') {
                 this.currentBlockNumber = this.latestBlockNumber;
-            } else if(this.currentBlockNumber < 0) {
-                // If the block number is negative, it will be interpreted as the number of blocks before the latest block
-                this.currentBlockNumber = this.latestBlockNumber - currentBlockNumber;
+            } else {
+                this.currentBlockNumber = parseInt(this.currentBlockNumber);
             }
+            
+            if(this.currentBlockNumber < 0) {
+                // If the block number is negative, it will be interpreted as the number of blocks before the latest block
+                this.currentBlockNumber = this.latestBlockNumber + this.currentBlockNumber;
+            }
+
             this.isStarted = true;
             this.isStopped = false;
             this.emit(MONITOR_EVENTS.started, 'Live monitor started');
