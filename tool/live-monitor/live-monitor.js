@@ -121,83 +121,91 @@ class LiveMonitor extends EventEmitter {
 
     start(params) {
 
-        if(this.timer || this.isStarted) {
-            this.emit(MONITOR_EVENTS.error, 'Live monitor already started');
-            return;
-        }
-        
-        if(params && params.network) {
-            this.rskClient = new Web3(params.network);
-        }
-
-        this.setParams(params);
-
-        if(!this.params) {
-            this.emit(MONITOR_EVENTS.error, 'Params not provided. Exiting...');
-            return;
-        }
-
-        if(!this.params.network) {
-            this.emit(MONITOR_EVENTS.error, 'Network not provided. Exiting...');
-            return;
-        }
-
-        const setup = async () => {
-            this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
-
-            if(this.currentBlockNumber === 'latest') {
-                this.currentBlockNumber = this.latestBlockNumber;
-            } else {
-                this.currentBlockNumber = parseInt(this.currentBlockNumber);
+        try {
+            if(this.timer || this.isStarted) {
+                this.emit(MONITOR_EVENTS.error, 'Live monitor already started');
+                return;
             }
             
-            if(this.currentBlockNumber < 0) {
-                // If the block number is negative, it will be interpreted as the number of blocks before the latest block
-                this.currentBlockNumber = this.latestBlockNumber + this.currentBlockNumber;
+            if(params && params.network) {
+                this.rskClient = new Web3(params.network);
             }
-
-            this.isStarted = true;
-            this.isStopped = false;
-            this.emit(MONITOR_EVENTS.started, 'Live monitor started');
-            this.timer = setInterval(async () => {
-                // If the current block number is greater than the latest block number, then we need to update the latest block number
-                if(this.currentBlockNumber > this.latestBlockNumber) {
-                    this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
+    
+            this.setParams(params);
+    
+            if(!this.params) {
+                this.emit(MONITOR_EVENTS.error, 'Params not provided. Exiting...');
+                return;
+            }
+    
+            if(!this.params.network) {
+                this.emit(MONITOR_EVENTS.error, 'Network not provided. Exiting...');
+                return;
+            }
+    
+            const setup = async () => {
+                this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
+    
+                if(this.currentBlockNumber === 'latest') {
+                    this.currentBlockNumber = this.latestBlockNumber;
+                } else {
+                    this.currentBlockNumber = parseInt(this.currentBlockNumber);
                 }
-                this.check();
-            }, this.params.checkEveryMilliseconds);
+                
+                if(this.currentBlockNumber < 0) {
+                    // If the block number is negative, it will be interpreted as the number of blocks before the latest block
+                    this.currentBlockNumber = this.latestBlockNumber + this.currentBlockNumber;
+                }
+    
+                this.isStarted = true;
+                this.isStopped = false;
+                this.emit(MONITOR_EVENTS.started, 'Live monitor started');
+                this.timer = setInterval(async () => {
+                    // If the current block number is greater than the latest block number, then we need to update the latest block number
+                    if(this.currentBlockNumber > this.latestBlockNumber) {
+                        this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
+                    }
+                    this.check();
+                }, this.params.checkEveryMilliseconds);
+            }
+    
+            setup();
+    
+        } catch(error) {
+            this.emit(MONITOR_EVENTS.error, `There was an error trying to start the live monitor: ${error.message}`);
+            console.error(error);
         }
-
-        setup();
 
         return this;
     }
 
     stop() {
-        if(this.timer) {
-            clearTimeout(this.timer);
-            this.timer = null;
+        try {
+            if(this.timer) {
+                clearTimeout(this.timer);
+                this.timer = null;
+            }
+            this.isStarted = false;
+            this.hasStopped = true;
+            this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped');
+        } catch(error) {
+            this.emit(MONITOR_EVENTS.error, `There was an error trying to stop the live monitor: ${error.message}`);
+            console.error(error);
         }
-        this.isStarted = false;
-        this.hasStopped = true;
-        this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped');
+
         return this;
     }
 
     reset(params) {
         this.stop();
-        this.setParams(params);
-        this.currentBlockNumber = this.params.fromBlock;
-        this.start();
+        this.start(params);
         this.emit(MONITOR_EVENTS.reset, 'Live monitor reset');
         this.hasReset = true;
         return this;
     }
 
-    setParams(params) {
-        if(params) {
-            this.params = { ...this.params, ...params };
-        }
+    setParams(params = {}) {
+        this.params = { ...this.params, ...params };
         return this;
     }
 
