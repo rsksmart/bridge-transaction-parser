@@ -107,7 +107,6 @@ const createBridgeTx = async (web3Client, bridge, tx, txReceipt) => {
 const decodeLogs = (web3Client, tx, bridge) => {
     const events = [];
     for (let txLog of tx.logs) {
-        console.log('txLog: ', txLog)
         let bridgeEvent = bridge._jsonInterface.find(i => i.signature === txLog.topics[0]);
         
         if (bridgeEvent) {
