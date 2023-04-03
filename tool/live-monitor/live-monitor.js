@@ -126,11 +126,8 @@ class LiveMonitor extends EventEmitter {
             return;
         }
         
-        if(params) {
-            const network = params.network;
-            if(network && network !== this.params.network) {
-                this.rskClient = new Web3(network);
-            }
+        if(params && params.network) {
+            this.rskClient = new Web3(params.network);
         }
 
         this.setParams(params);
