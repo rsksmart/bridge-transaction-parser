@@ -159,6 +159,7 @@ class LiveMonitor extends EventEmitter {
     
                 this.isStarted = true;
                 this.isStopped = false;
+                this.notified = false;
                 this.emit(MONITOR_EVENTS.started, 'Live monitor started');
                 this.timer = setInterval(async () => {
                     // If the current block number is greater than the latest block number, then we need to update the latest block number
@@ -198,6 +199,7 @@ class LiveMonitor extends EventEmitter {
 
     reset(params) {
         this.stop();
+        this.currentBlockNumber = params.fromBlock;
         this.start(params);
         this.emit(MONITOR_EVENTS.reset, 'Live monitor reset');
         this.hasReset = true;
