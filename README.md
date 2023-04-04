@@ -146,11 +146,13 @@ const params = {
     events: ['release_request_received'],
     pegout: true,
     pegin: false,
-    network: 'testnet', // Only used with the cli-live-monitor tool. Could also be a custom network like http://13.38.77.151:4444
+    network: 'https://public-node.testnet.rsk.co/',
     checkEveryMilliseconds: 1000,
 };
 
-const monitor = new LiveMonitor(params, web3Client);
+// Passing params through the constructor is optional. Default params will be used if not provided.
+// The can be provided at any time using the `reset(params)` function.
+const monitor = new LiveMonitor(params);
 
 monitor.on(MONITOR_EVENTS.stopped, () => {
     console.info("Monitor stopped");
@@ -177,6 +179,22 @@ monitor.on(MONITOR_EVENTS.error, errorMessage => {
     console.info(errorMessage);
 });
 
-monitor.start();
+// We can optionally pass the params to the `start` functions the first time we run the `start` function.
+// Otherwise we need to use `reset(params)` function if the monitor had already started.
+monitor.start(params);
+
+const newParams = {
+    fromBlock: -100, // A negative number indicates that the monitor should start checking this amount of blocks back from the latest
+    methods: [], // Any method
+    events: [], // Any events
+    pegout: true, // Includes pegout related transactions
+    pegin: true, // Includes pegin related transactions
+    network: 'https://public-node.rsk.co/', // New network
+    checkEveryMilliseconds: 1000,
+};
+
+// The `reset` function will `stop()` the monitor and then `start(params)` it with the new params.
+// These parameters are also optional. If not provided, default values will be used.
+monitor.reset(newParams);
 
 ```
