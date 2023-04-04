@@ -144,30 +144,36 @@ class LiveMonitor extends EventEmitter {
             }
     
             const setup = async () => {
-                this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
+                try {
+                    this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
     
-                if(this.currentBlockNumber === 'latest') {
-                    this.currentBlockNumber = this.latestBlockNumber;
-                } else {
-                    this.currentBlockNumber = parseInt(this.currentBlockNumber);
-                }
-                
-                if(this.currentBlockNumber < 0) {
-                    // If the block number is negative, it will be interpreted as the number of blocks before the latest block
-                    this.currentBlockNumber = this.latestBlockNumber + this.currentBlockNumber;
-                }
-    
-                this.isStarted = true;
-                this.isStopped = false;
-                this.notified = false;
-                this.emit(MONITOR_EVENTS.started, 'Live monitor started');
-                this.timer = setInterval(async () => {
-                    // If the current block number is greater than the latest block number, then we need to update the latest block number
-                    if(this.currentBlockNumber > this.latestBlockNumber) {
-                        this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
+                    if(this.currentBlockNumber === 'latest') {
+                        this.currentBlockNumber = this.latestBlockNumber;
+                    } else {
+                        this.currentBlockNumber = parseInt(this.currentBlockNumber);
                     }
-                    this.check();
-                }, this.params.checkEveryMilliseconds);
+                    
+                    if(this.currentBlockNumber < 0) {
+                        // If the block number is negative, it will be interpreted as the number of blocks before the latest block
+                        this.currentBlockNumber = this.latestBlockNumber + this.currentBlockNumber;
+                    }
+        
+                    this.isStarted = true;
+                    this.isStopped = false;
+                    this.notified = false;
+                    this.emit(MONITOR_EVENTS.started, 'Live monitor started');
+                    this.timer = setInterval(async () => {
+    
+                        // If the current block number is greater than the latest block number, then we need to update the latest block number
+                        if(this.currentBlockNumber > this.latestBlockNumber) {
+                            this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
+                        }
+                        this.check();
+                    }, this.params.checkEveryMilliseconds);
+                } catch(error) {
+                    this.emit(MONITOR_EVENTS.error, `There was an error trying to setup the live monitor: ${error.message}`);
+                    console.error('There was an error trying to setup the live monitor', error);
+                }
             }
     
             setup();
