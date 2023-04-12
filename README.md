@@ -33,7 +33,7 @@ It can be executed against a node running in any network (regtest, testnet or ma
 
 To print in the console all the transactions sent to the bridge with their method and events data, the following command can be used:
 
-> node tool/live-monitor.js
+> node tool/live-monitor/cli-live-monitor.js
 
 The tool will start checking block by block (starting from the latest one), transaction by transaction, filtering the transaction sent to the bridge and printing a payload like this:
 
@@ -91,42 +91,110 @@ Available param options:
 * [--pegout] if provided, prints peg-out related transactions  It can be used along `--pegin` to only print peg-in and peg-out related transactions
 * [--methods="['bridgeMethod1', 'bridgeMethod2']"] prints transaction data of calls made to any of the specified bridge methods. Defaults to all Bridge methods
 * [--events="['bridgeEvent1', 'bridgeEvent2']"] prints transaction data of those that emitted any of these events. Defaults to all Bridge events
-* [--checkeverymillis=timeInMilliseconds] time between executions to get the next block to filter and print the transactions data. Defaults to 1000 milliseconds
+* [--checkEveryMilliseconds=timeInMilliseconds] time between executions to get the next block to filter and print the transactions data. Defaults to 1000 milliseconds
 
-### Samples
+### Samples with the command line
 
 Note: All the options are optional and can be provided in any order
 
 Print all Bridge methods and events related transaction data starting at block `3,573,827` in `testnet`:
 
-> node tool/live-monitor.js --fromblock=3574944 
+> node tool/live-monitor/cli-live-monitor.js --fromblock=3574944 
 
 Print all the peg-out related transaction data from block `3,574,944 ` in a local node at `http://127.0.0.1:30007`:
 
-> node tool/live-monitor.js --fromblock=3574944  --pegout --network=http://127.0.0.1:30007
+> node tool/live-monitor/cli-live-monitor.js --fromblock=3574944  --pegout --network=http://127.0.0.1:30007
 
 Print all the transaction data that only has the `addSignature` method starting at the latest block in `testnet`:
 
-> node tool/live-monitor.js --methods="['addSignature']"
+> node tool/live-monitor/cli-live-monitor.js --methods="['addSignature']"
 
 Print all the transaction data only related to peg-ins and peg-outs in testnet:
 
-> node tool/live-monitor.js --pegin --pegout
+> node tool/live-monitor/cli-live-monitor.js --pegin --pegout
 
 Only print peg-in related transaction data in testnet from block `3,575,114`:
 
-> node tool/live-monitor.js --fromblock=3575114 --pegin
+> node tool/live-monitor/cli-live-monitor.js --fromblock=3575114 --pegin
 
 Only print peg-out related transaction data in testnet:
 
-> node tool/live-monitor.js --pegout
+> node tool/live-monitor/cli-live-monitor.js --pegout
 
 Only print the transaction data that contains the `updateCollections` method and the `release_requested` event starting at block `3,574,944 ` in `testnet`:
 
-> node tool/live-monitor.js --fromblock=3574944  --methods="['updateCollections']" --events="['release_requested']"
+> node tool/live-monitor/cli-live-monitor.js --fromblock=3574944  --methods="['updateCollections']" --events="['release_requested']"
 
 Only print the transaction data that contains the `updateCollections` method and the `release_requested` event starting at block `500` at host `http://127.0.0.1:30007` retrieving new blocks every minute:
 
-> node tool/live-monitor.js --fromblock=500 --methods="['updateCollections']" --events="['release_requested']" --network=http://127.0.0.1:30007 --checkeverymillis=60000
+> node tool/live-monitor/cli-live-monitor.js --fromblock=500 --methods="['updateCollections']" --events="['release_requested']" --network=http://127.0.0.1:30007 --checkEveryMilliseconds=60000
 
 If an unknown option parameter is passed, the tool will throw an exception.
+
+### Samples with the exported `monitor` function
+
+```js
+
+const LiveMonitor = require('./tool/live-monitor');
+const Web3 = require('web3');
+
+const rskClient = new Web3('https://public-node.testnet.rsk.co/');
+
+const params = {
+    fromBlock: 'latest',
+    methods: ['updateCollections'],
+    events: ['release_request_received'],
+    pegout: true,
+    pegin: false,
+    network: 'https://public-node.testnet.rsk.co/',
+    checkEveryMilliseconds: 1000,
+};
+
+// Passing params through the constructor is optional. Default params will be used if not provided.
+// The can be provided at any time using the `reset(params)` function.
+const monitor = new LiveMonitor(params);
+
+monitor.on(MONITOR_EVENTS.stopped, () => {
+    console.info("Monitor stopped");
+});
+
+monitor.on(MONITOR_EVENTS.started, () => {
+    console.info("Monitor started");
+});
+
+monitor.on(MONITOR_EVENTS.checkingBlock, blockNumber => {
+    console.info("Checking block: ", blockNumber);
+});
+
+monitor.on(MONITOR_EVENTS.filterMatched, bridgeTxDetails => {
+    console.info("Found a tx:");
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+monitor.on(MONITOR_EVENTS.latestBlockReached, message => {
+    console.info(message);
+});
+
+monitor.on(MONITOR_EVENTS.error, errorMessage => {
+    console.info(errorMessage);
+});
+
+// We can optionally pass the params to the `start` functions the first time we run the `start` function.
+// Otherwise we need to use `reset(params)` function if the monitor had already started.
+monitor.start(params);
+
+const newParams = {
+    fromBlock: -100, // A negative number indicates that the monitor should start checking this amount of blocks back from the latest
+    methods: [], // Any method
+    events: [], // Any events
+    pegout: true, // Includes pegout related transactions
+    pegin: true, // Includes pegin related transactions
+    network: 'https://public-node.rsk.co/', // New network
+    checkEveryMilliseconds: 1000,
+};
+
+// The `reset` function will `stop()` the monitor and then `start(params)` it with the new params.
+// These parameters are also optional. If not provided, default values will be used.
+monitor.reset(newParams);
+
+```
