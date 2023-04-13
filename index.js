@@ -1,17 +1,18 @@
-const Bridge = require('@rsksmart/hop-rsk-precompiled-abis').bridge;
+const HopBridge = require('@rsksmart/hop-rsk-precompiled-abis').bridge;
+const FingerrootBridge = require('@rsksmart/fingerroot-rsk-precompiled-abis').bridge;
 const BridgeTx = require("./BridgeTx");
 const BridgeMethod = require("./BridgeMethod");
 const BridgeEvent = require("./BridgeEvent");
 const utils = require("./utils");
 
-const getBridgeTransactionByTxHash = async (web3Client, transactionHash) => {
+const getBridgeTransactionByTxHash = async (web3Client, transactionHash, postFingerrot = false) => {
     utils.verifyHashOrBlockNumber(transactionHash);
 
     let transaction;
     const txReceipt = await web3Client.eth.getTransactionReceipt(transactionHash);
     
-    if (txReceipt?.to === Bridge.address) {
-        const bridge = Bridge.build(web3Client);
+    if (txReceipt?.to === HopBridge.address) {
+        const bridge = postFingerrot ? FingerrootBridge.build(web3Client) : HopBridge.build(web3Client);
         const tx = await web3Client.eth.getTransaction(txReceipt.transactionHash);
         transaction = await createBridgeTx(web3Client, bridge, tx, txReceipt);
     }
@@ -19,7 +20,7 @@ const getBridgeTransactionByTxHash = async (web3Client, transactionHash) => {
     return transaction;
 }
 
-const getBridgeTransactionsInThisBlock = async (web3Client, blockHashOrBlockNumber) => {
+const getBridgeTransactionsInThisBlock = async (web3Client, blockHashOrBlockNumber, postFingerrot = false) => {
     utils.verifyHashOrBlockNumber(blockHashOrBlockNumber);
 
     const block = await web3Client.eth.getBlock(blockHashOrBlockNumber);
@@ -29,7 +30,7 @@ const getBridgeTransactionsInThisBlock = async (web3Client, blockHashOrBlockNumb
 
     const bridgeTxs = [];
     for (let txHash of block.transactions) {
-        let transaction = await getBridgeTransactionByTxHash(web3Client, txHash);
+        let transaction = await getBridgeTransactionByTxHash(web3Client, txHash, postFingerrot);
         if (transaction) {
             bridgeTxs.push(transaction);
         }
@@ -38,7 +39,7 @@ const getBridgeTransactionsInThisBlock = async (web3Client, blockHashOrBlockNumb
 }
 
 // TODO: Add test case to verify that a search going beyond the best block should fail
-const getBridgeTransactionsSinceThisBlock = async (web3Client, startingBlockHashOrBlockNumber, blocksToSearch) => {
+const getBridgeTransactionsSinceThisBlock = async (web3Client, startingBlockHashOrBlockNumber, blocksToSearch, postFingerrot = false) => {
     utils.verifyHashOrBlockNumber(startingBlockHashOrBlockNumber);
 
     if (isNaN(blocksToSearch) || blocksToSearch > 100 || blocksToSearch <= 0) {
@@ -51,7 +52,7 @@ const getBridgeTransactionsSinceThisBlock = async (web3Client, startingBlockHash
     const bridgeTxs = [];
     for (let i = 0; i < blocksToSearch; i++) {
         let blockNumber = parseInt(startingBlockNumber) + i;
-        let blockBridgeTxs = await getBridgeTransactionsInThisBlock(web3Client, blockNumber);
+        let blockBridgeTxs = await getBridgeTransactionsInThisBlock(web3Client, blockNumber, postFingerrot);
         if (blockBridgeTxs.length) {
             bridgeTxs.push(...blockBridgeTxs);
         }
@@ -60,24 +61,25 @@ const getBridgeTransactionsSinceThisBlock = async (web3Client, startingBlockHash
 
 }
 
-const decodeBridgeTransaction = async (web3Client, bridgeTx, bridgeTxReceipt) => {
+const decodeBridgeTransaction = async (web3Client, bridgeTx, bridgeTxReceipt, postFingerrot = false) => {
     if (bridgeTx.hash !== bridgeTxReceipt.transactionHash) {
         throw new Error(`Given bridgeTx(${bridgeTx.hash}) and bridgeTxReceipt(${bridgeTxReceipt.transactionHash}) 
         should belong to the same transaction.`);
     }
 
-    if (bridgeTxReceipt?.to !== Bridge.address) {
+    if (bridgeTxReceipt?.to !== HopBridge.address) {
         throw new Error(`Given bridgeTxReceipt is not a bridge transaction`);
     }
 
-    const bridge = Bridge.build(web3Client);
+    const bridge = postFingerrot ? FingerrootBridge.build(web3Client) : HopBridge.build(web3Client);
+
     return createBridgeTx(web3Client, bridge, bridgeTx, bridgeTxReceipt);
 }
 
 const decodeBridgeMethodParameters = (web3Client, methodName, data) => {
-    const abi = Bridge.abi.find(m => m.name === methodName);
+    const abi = HopBridge.abi.find(m => m.name === methodName);
     if (!abi) {
-        throw new Error(`${methodName} does not exist in Bridge abi`);
+        throw new Error(`${methodName} does not exist in HopBridge abi`);
     }
 
     let argumentsData = data.substring(10); // Remove the signature bits from the data
