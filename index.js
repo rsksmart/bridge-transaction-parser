@@ -10,9 +10,11 @@ const getBridgeTransactionByTxHash = async (web3Client, transactionHash, postFin
 
     let transaction;
     const txReceipt = await web3Client.eth.getTransactionReceipt(transactionHash);
+
+    const Bridge = postFingerrot ? FingerrootBridge : HopBridge;
     
-    if (txReceipt?.to === HopBridge.address) {
-        const bridge = postFingerrot ? FingerrootBridge.build(web3Client) : HopBridge.build(web3Client);
+    if (txReceipt?.to === Bridge.address) {
+        const bridge = Bridge.build(web3Client);
         const tx = await web3Client.eth.getTransaction(txReceipt.transactionHash);
         transaction = await createBridgeTx(web3Client, bridge, tx, txReceipt);
     }
@@ -67,19 +69,24 @@ const decodeBridgeTransaction = async (web3Client, bridgeTx, bridgeTxReceipt, po
         should belong to the same transaction.`);
     }
 
-    if (bridgeTxReceipt?.to !== HopBridge.address) {
+    const Bridge = postFingerrot ? FingerrootBridge : HopBridge;
+
+    if (bridgeTxReceipt?.to !== Bridge.address) {
         throw new Error(`Given bridgeTxReceipt is not a bridge transaction`);
     }
 
-    const bridge = postFingerrot ? FingerrootBridge.build(web3Client) : HopBridge.build(web3Client);
+    const bridge = Bridge.build(web3Client);
 
     return createBridgeTx(web3Client, bridge, bridgeTx, bridgeTxReceipt);
 }
 
-const decodeBridgeMethodParameters = (web3Client, methodName, data) => {
-    const abi = HopBridge.abi.find(m => m.name === methodName);
+const decodeBridgeMethodParameters = (web3Client, methodName, data, postFingerrot = false) => {
+
+    const Bridge = postFingerrot ? FingerrootBridge : HopBridge;
+    
+    const abi = Bridge.abi.find(m => m.name === methodName);
     if (!abi) {
-        throw new Error(`${methodName} does not exist in HopBridge abi`);
+        throw new Error(`${methodName} does not exist in the bridge abi`);
     }
 
     let argumentsData = data.substring(10); // Remove the signature bits from the data
