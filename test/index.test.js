@@ -1,8 +1,9 @@
-const chai = require('chai')
+const chai = require('chai');
 const assert = chai.assert;
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const {expect} = chai;
+const Bridge = require('@rsksmart/fingerroot-rsk-precompiled-abis').bridge;
 
 const sinon = require('sinon');
 const rewire = require('rewire');
@@ -59,12 +60,12 @@ const bridgeInstanceStub = {
         {
             inputs: [
                 {indexed: true, name: 'sender', type: 'address'},
-                {indexed: false, name: 'btcDestinationAddress', type: 'bytes'},
+                {indexed: false, name: 'btcDestinationAddress', type: 'string'},
                 {indexed: false, name: 'amount', type: 'uint256'}
             ],
             name: 'release_request_received',
             type: 'event',
-            signature: '0x8e04e2f2c246a91202761c435d6a4971bdc7af0617f0c739d900ecd12a6d7266'
+            signature: '0x1a4457a4460d48b40c5280955faf8e4685fa73f0866f7d8f573bdd8e64aca5b1'
         }
     ]
 };
@@ -74,23 +75,7 @@ const bridgeStub = {
         return bridgeInstanceStub
     },
     address: '0x0000000000000000000000000000000001000006',
-    abi: [
-        {
-            name: 'updateCollections',
-            inputs: [],
-            signature: '0x0c5a9990'
-        },
-        {
-            name: 'commitFederation',
-            inputs: [
-                {
-                    name: 'hash',
-                    type: 'bytes'
-                }
-            ],
-            signature: '0x1533330f'
-        }
-    ]
+    abi: Bridge.abi
 }
 
 const txReceiptsStub = [
@@ -162,7 +147,7 @@ const txReceiptsStub = [
             {
                 data: '0x0000000000000000000000000000000000000000000000000000000000000040',
                 topics: [
-                    '0x8e04e2f2c246a91202761c435d6a4971bdc7af0617f0c739d900ecd12a6d7266',
+                    '0x1a4457a4460d48b40c5280955faf8e4685fa73f0866f7d8f573bdd8e64aca5b1',
                     '0x00000000000000000000000075d7b75612ed7a0edc70ceced86a9701e8d07d6a'
                 ]
             }
@@ -357,7 +342,7 @@ describe('Get Bridge Transaction By Tx Hash', () => {
         assert.equal(result.events[1].arguments.amount, "1011610");
 
         assert.equal(result.events[2].name, "release_request_received");
-        assert.equal(result.events[2].signature, "0x8e04e2f2c246a91202761c435d6a4971bdc7af0617f0c739d900ecd12a6d7266");
+        assert.equal(result.events[2].signature, "0x1a4457a4460d48b40c5280955faf8e4685fa73f0866f7d8f573bdd8e64aca5b1");
         assert.equal(result.events[2].arguments.sender, "0x75d7B75612Ed7A0eDc70ceCED86A9701E8D07D6a");
         assert.equal(result.events[2].arguments.btcDestinationAddress, "mhmWxtqj4oAgLkkyZs3impteLcn7csDuMq");
         assert.equal(result.events[2].arguments.amount, "1000000");
@@ -509,7 +494,7 @@ describe('Gets a Bridge Transaction given a bridgeTx: web3TransactionObject and 
         assert.equal(transaction.events[1].arguments.amount, "1011610");
 
         assert.equal(transaction.events[2].name, "release_request_received");
-        assert.equal(transaction.events[2].signature, "0x8e04e2f2c246a91202761c435d6a4971bdc7af0617f0c739d900ecd12a6d7266");
+        assert.equal(transaction.events[2].signature, "0x1a4457a4460d48b40c5280955faf8e4685fa73f0866f7d8f573bdd8e64aca5b1");
         assert.equal(transaction.events[2].arguments.sender, "0x75d7B75612Ed7A0eDc70ceCED86A9701E8D07D6a");
         assert.equal(transaction.events[2].arguments.btcDestinationAddress, "mhmWxtqj4oAgLkkyZs3impteLcn7csDuMq");
         assert.equal(transaction.events[2].arguments.amount, "1000000");
