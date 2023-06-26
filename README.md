@@ -1,3 +1,7 @@
+![Github CI/CD](https://github.com/rsksmart/bridge-transaction-parser/actions/workflows/workflow.yml/badge.svg)
+[![CodeQL](https://github.com/rsksmart/bridge-transaction-parser/workflows/CodeQL/badge.svg)](https://github.com/rsksmart/bridge-transaction-parser/actions?query=workflow%3ACodeQL)
+
+
 # bridge-transaction-parser
 A tool to find interactions with the Bridge on RSK
 
@@ -6,7 +10,7 @@ A tool to find interactions with the Bridge on RSK
 This is a beta version until audited by the security team. Any comments or suggestions feel free to contribute or reach out at our [open slack](https://developers.rsk.co/slack).
 
 ## Prerequisites
-1. Have nodejs installed https://nodejs.org/. Minimum version: 14.
+1. Have nodejs installed https://nodejs.org/. LTS version.
 2. Install dependencies `npm install`
 
 ## Run console tool:
