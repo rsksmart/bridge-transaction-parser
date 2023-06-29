@@ -1,4 +1,4 @@
-const Bridge = require('@rsksmart/rsk-precompiled-abis-hop400').bridge;
+const Bridge = require('@rsksmart/rsk-precompiled-abis-fingerroot500').bridge;
 const BridgeTx = require("./BridgeTx");
 const BridgeMethod = require("./BridgeMethod");
 const BridgeEvent = require("./BridgeEvent");
