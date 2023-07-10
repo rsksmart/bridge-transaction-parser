@@ -1,6 +1,6 @@
 {
   "name": "bridge-transaction-parser",
-  "version": "0.5.0-beta",
+  "version": "0.6.0-beta",
   "description": "",
   "main": "index.js",
   "scripts": {
