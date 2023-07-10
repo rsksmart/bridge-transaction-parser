@@ -101,7 +101,13 @@ const createBridgeTx = async (web3Client, bridge, tx, txReceipt) => {
         let args = await decodeBridgeMethodParameters(web3Client, method.name, txData);
         bridgeMethod = new BridgeMethod(method.name, method.signature, args);
     }
-    return new BridgeTx(txReceipt.transactionHash, bridgeMethod, events, txReceipt.blockNumber);
+    return new BridgeTx(
+        txReceipt.transactionHash, 
+        bridgeMethod, 
+        events, 
+        txReceipt.from, 
+        txReceipt.blockNumber
+    );
 };
 
 const decodeLogs = (web3Client, tx, bridge) => {

@@ -106,12 +106,14 @@ const txReceiptsStub = [
                 ]
             }
         ],
+        from: '0x4495768e683423a4299d6a7f02a0689a6ff5a0a4',
         to: '0x39192498fcf1dbe11653040bb49308e09a1056ac'
     },
     {
         transactionHash: '0x7f6c029fba670f1ee14729e5531c672e813ac1ef4c86dec313b090119c14fa78',
         blockNumber: 1002,
         logs: [],
+        from: '0x4495768e683423a4299d6a7f02a0689a6ff5a0a4',
         to: '0x39192498fcf1dbe11653040bb49308e09a1056ac'
     },
     {
@@ -125,6 +127,7 @@ const txReceiptsStub = [
                 ]
             }
         ],
+        from: '0x6aff5f3d80744d84a4e4033b27de2ac1d6a49f34',
         to: '0x8bf2f24afbb9dbe4f2a54fd72748fc797bb91f81'
     },
     // Bridge transactions
@@ -139,6 +142,7 @@ const txReceiptsStub = [
                 ]
             }
         ],
+        from: '0xfe90f02331ddf62cb50f5650dca554b47b37c471',
         to: '0x0000000000000000000000000000000001000006'
     },
     {
@@ -167,6 +171,7 @@ const txReceiptsStub = [
                 ]
             }
         ],
+        from: '0xde7cfc6aa19c7ddea05bb50de9b4e1ff461b972f',
         to: '0x0000000000000000000000000000000001000006'
     },
     {
@@ -227,7 +232,7 @@ const dataDecodedResults = [
     {
         data: '0x000000000000000000000000fe90f02331ddf62cb50f5650dca554b47b37c471',
         decoded: {
-            sender: '0xFE90f02331DdF62cb50F5650Dca554b47B37c471'
+            sender: '0xfe90f02331ddf62cb50f5650dca554b47b37c471'
         }
     },
     {
@@ -306,7 +311,7 @@ const web3ClientStub = {
 let transactionParser;
 let sandbox;
 
-describe('Get Bridge Transaction By Tx Hash', () => {
+describe('Get Bridge transaction by tx hash', () => {
 
     beforeEach((done) => {
         transactionParser = rewire('../index');
@@ -322,7 +327,7 @@ describe('Get Bridge Transaction By Tx Hash', () => {
         done();
     });
 
-    it('Should Fail For Invalid Transaction Hash', async () => {
+    it('Should fail for invalid transaction hash', async () => {
         const transactionHash = "0x12345";
 
         await expect(transactionParser.getBridgeTransactionByTxHash(web3ClientStub, transactionHash))
@@ -335,11 +340,15 @@ describe('Get Bridge Transaction By Tx Hash', () => {
         await expect(transactionParser.getBridgeTransactionByTxHash(web3ClientStub, txReceipt.transactionHash)).to.be.empty;
     });
 
-    it('Should Verify And Return Bridge Transaction From Tx Hash', async () => {
+    it('Should verify and return Bridge transaction from tx hash', async () => {
         let txReceipt = txReceiptsStub[4];
-        let result = await transactionParser.getBridgeTransactionByTxHash(web3ClientStub, txReceipt.transactionHash);
+        let result = await transactionParser.getBridgeTransactionByTxHash(
+            web3ClientStub, 
+            txReceipt.transactionHash
+        );
 
         assert.equal(result.txHash, txReceipt.transactionHash);
+        assert.equal(result.sender, txReceipt.from);
         assert.equal(result.blockNumber, txReceipt.blockNumber);
 
         assert.equal(result.method.name, "updateCollections");
@@ -348,7 +357,7 @@ describe('Get Bridge Transaction By Tx Hash', () => {
         assert.lengthOf(result.events, 3);
         assert.equal(result.events[0].name, "update_collections");
         assert.equal(result.events[0].signature, "0x1069152f4f916cbf155ee32a695d92258481944edb5b6fd649718fc1b43e515e");
-        assert.equal(result.events[0].arguments.sender, '0xFE90f02331DdF62cb50F5650Dca554b47B37c471');
+        assert.equal(result.events[0].arguments.sender, '0xfe90f02331ddf62cb50f5650dca554b47b37c471');
 
         assert.equal(result.events[1].name, "release_requested");
         assert.equal(result.events[1].signature, "0x7a7c29481528ac8c2b2e93aee658fddd4dc15304fa723a5c2b88514557bcc790");
@@ -364,7 +373,7 @@ describe('Get Bridge Transaction By Tx Hash', () => {
     });
 })
 
-describe('Get Bridge Transactions From Single Block', () => {
+describe('Get Bridge transactions from single block', () => {
 
     beforeEach((done) => {
         transactionParser = rewire('../index');
@@ -380,7 +389,7 @@ describe('Get Bridge Transactions From Single Block', () => {
         done();
     });
 
-    it('Should Fail For Invalid Block Number', async () => {
+    it('Should fail for invalid block number', async () => {
         const blockNumber = 0;
 
         await expect(transactionParser.getBridgeTransactionsInThisBlock(web3ClientStub, blockNumber))
@@ -401,9 +410,12 @@ describe('Get Bridge Transactions From Single Block', () => {
         assert.lengthOf(result, 0);
     });
 
-    it('Should Verify And Return Bridge Transactions From Block', async () => {
+    it('Should verify and return Bridge transactions from block', async () => {
         let block = blocksStub[0];
-        let result = await transactionParser.getBridgeTransactionsInThisBlock(web3ClientStub, block.number);
+        let result = await transactionParser.getBridgeTransactionsInThisBlock(
+            web3ClientStub, 
+            block.number
+        );
 
         assert.lengthOf(result, 2);
         assert.equal(result[0].txHash, block.transactions[0]);
@@ -411,7 +423,7 @@ describe('Get Bridge Transactions From Single Block', () => {
     });
 })
 
-describe('Get Bridge Transactions From Multiple Blocks', () => {
+describe('Get Bridge transactions from multiple blocks', () => {
 
     beforeEach((done) => {
         transactionParser = rewire('../index');
@@ -427,7 +439,7 @@ describe('Get Bridge Transactions From Multiple Blocks', () => {
         done();
     });
 
-    it('Should Fail For Invalid Start Block Number', async () => {
+    it('Should fail for invalid start block number', async () => {
         let startingBlock = 0;
         let blocksToSearch = 5;
         await expect(transactionParser.getBridgeTransactionsSinceThisBlock(web3ClientStub, startingBlock, blocksToSearch))
@@ -500,7 +512,7 @@ describe('Gets a Bridge Transaction given a bridgeTx: web3TransactionObject and 
         assert.lengthOf(transaction.events, 3);
         assert.equal(transaction.events[0].name, "update_collections");
         assert.equal(transaction.events[0].signature, "0x1069152f4f916cbf155ee32a695d92258481944edb5b6fd649718fc1b43e515e");
-        assert.equal(transaction.events[0].arguments.sender, '0xFE90f02331DdF62cb50F5650Dca554b47B37c471');
+        assert.equal(transaction.events[0].arguments.sender, '0xfe90f02331ddf62cb50f5650dca554b47b37c471');
 
         assert.equal(transaction.events[1].name, "release_requested");
         assert.equal(transaction.events[1].signature, "0x7a7c29481528ac8c2b2e93aee658fddd4dc15304fa723a5c2b88514557bcc790");
