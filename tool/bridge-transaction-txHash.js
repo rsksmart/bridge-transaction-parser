@@ -1,14 +1,14 @@
 const Web3 = require('web3');
 const networkParser = require('./network-parser');
-const blockTransactionParser = require('../index');
+const BridgeTransactionParser = require('../index');
 
 (async () => {
     try {
         const network = process.argv[2];
         const web3Client = new Web3(networkParser(network));
-
+        const bridgeTransactionParser = new BridgeTransactionParser(web3Client);
         const transactionHash = process.argv[3]; // Format: 0x73a4d1592c5e922c2c6820985982d2715538717e4b4b52502685bc4c924300b7
-        const transaction = await blockTransactionParser.getBridgeTransactionByTxHash(web3Client, transactionHash)
+        const transaction = await bridgeTransactionParser.getBridgeTransactionByTxHash(transactionHash)
         
         if (transaction) {
             console.log(JSON.stringify(transaction, null, 2));
