@@ -56,7 +56,7 @@ class BridgeTransactionParser {
     
         const startingBlockNumber = typeof startingBlockHashOrBlockNumber === 'string' && startingBlockHashOrBlockNumber.indexOf('0x') === 0 ?
             (await this.web3Client.eth.getBlock(startingBlockHashOrBlockNumber)).number : startingBlockHashOrBlockNumber;
-        
+
         const bridgeTxs = [];
         for (let i = 0; i < blocksToSearch; i++) {
             const blockNumber = parseInt(startingBlockNumber) + i;

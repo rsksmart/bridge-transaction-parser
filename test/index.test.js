@@ -315,7 +315,20 @@ const web3ClientStub = {
     })
 };
 
+describe('Constructor', () => {
 
+    it('Should fail for invalid web3 client', async () => {
+        const web3Client = null;
+        expect(() => new BridgeTransactionParser(web3Client))
+            .to.throw('web3Client is required');
+    });
+
+    it('Should create instance', async () => {
+        const bridgeTransactionParser = new BridgeTransactionParser(web3ClientStub);
+        assert.equal(bridgeTransactionParser.web3Client, web3ClientStub);
+    });
+
+});
 
 describe('Get Bridge transaction by tx hash', () => {
 
