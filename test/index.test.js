@@ -360,8 +360,8 @@ describe('Get Bridge transaction by tx hash', () => {
     });
 
     it('Should verify and return Bridge transaction from tx hash', async () => {
-        let txReceipt = txReceiptsStub[4];
-        let result = await bridgeTransactionParser.getBridgeTransactionByTxHash(
+        const txReceipt = txReceiptsStub[4];
+        const result = await bridgeTransactionParser.getBridgeTransactionByTxHash(
             txReceipt.transactionHash
         );
 
@@ -422,15 +422,15 @@ describe('Get Bridge transactions from single block', () => {
     });
 
     it('Should return empty for block without Bridge transactions', async () => {
-        let block = blocksStub[1];
-        let result = await bridgeTransactionParser.getBridgeTransactionsInThisBlock(block.number);
+        const block = blocksStub[1];
+        const result = await bridgeTransactionParser.getBridgeTransactionsInThisBlock(block.number);
 
         assert.lengthOf(result, 0);
     });
 
     it('Should verify and return Bridge transactions from block', async () => {
-        let block = blocksStub[0];
-        let result = await bridgeTransactionParser.getBridgeTransactionsInThisBlock(
+        const block = blocksStub[0];
+        const result = await bridgeTransactionParser.getBridgeTransactionsInThisBlock(
             block.number
         );
 
@@ -457,21 +457,21 @@ describe('Get Bridge transactions from multiple blocks', () => {
     });
 
     it('Should fail for invalid start block number', async () => {
-        let startingBlock = 0;
-        let blocksToSearch = 5;
-        await expect(bridgeTransactionParser.getBridgeTransactionsSinceThisBlock(startingBlock, blocksToSearch))
+        const startingBlockNumber1 = 0;
+        const blocksToSearch1 = 5;
+        await expect(bridgeTransactionParser.getBridgeTransactionsSinceThisBlock(startingBlockNumber1, blocksToSearch1))
             .to.be.rejectedWith('Block number must be greater than 0');
 
-        startingBlock = 3701647;
-        blocksToSearch = 101;
-        await expect(bridgeTransactionParser.getBridgeTransactionsSinceThisBlock(startingBlock, blocksToSearch))
+        const startingBlockNumber2 = 3701647;
+        const blocksToSearch2 = 101;
+        await expect(bridgeTransactionParser.getBridgeTransactionsSinceThisBlock(startingBlockNumber2, blocksToSearch2))
             .to.be.rejectedWith('blocksToSearch must be greater than 0 or less than 100');
     });
 
     it('Should Verify And Return Bridge Transactions From Blocks', async () => {
         const startingBlockNumber = 1001;
         const blocksToSearch = 3;
-        let result = await bridgeTransactionParser.getBridgeTransactionsSinceThisBlock(startingBlockNumber, blocksToSearch);
+        const result = await bridgeTransactionParser.getBridgeTransactionsSinceThisBlock(startingBlockNumber, blocksToSearch);
 
         assert.lengthOf(result, 3);
         assert.equal(result[0].txHash, blocksStub[0].transactions[0]);
@@ -480,7 +480,7 @@ describe('Get Bridge transactions from multiple blocks', () => {
     });
 });
 
-describe('Gets a Bridge Transaction given a bridgeTx: web3TransactionObject and a bridgeTxReceipt: TransactionReceipt', () => {
+describe('Gets a Bridge Transaction given a web3 transaction: web3TransactionObject and a bridgeTxReceipt: TransactionReceipt', () => {
 
     let sandbox;
     let bridgeTransactionParser;

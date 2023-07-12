@@ -5,6 +5,7 @@ interface Transaction {
     txHash: string,
     method: BridgeMethod,
     events: BridgeEvent[],
+    from: string,
     blockNumber: number
 }
 
@@ -51,12 +52,12 @@ export class BridgeTransactionParser {
     getBridgeTransactionByTxHash(transactionHash: string): Promise<Transaction>;
 
     /**
-     * Gets a Bridge Transaction given a bridgeTx: web3TransactionObject and a bridgeTxReceipt: TransactionReceipt.
-     * @param bridgeTx The bridgeTx web3TransactionObject.
+     * Gets a Bridge Transaction given a web3 transaction: web3TransactionObject and a bridgeTxReceipt: TransactionReceipt.
+     * @param web3Tx The web3TransactionObject.
      * @param bridgeTxReceipt The bridgeTxReceipt: web3TransactionReceiptObject.
      * @returns Object - A transaction object
      */
-     decodeBridgeTransaction(bridgeTx: Web3Transaction, bridgeTxReceipt: TransactionReceipt): Promise<Transaction>;
+     decodeBridgeTransaction(web3Tx: Web3Transaction, bridgeTxReceipt: TransactionReceipt): Promise<Transaction>;
 
 }
 

@@ -46,7 +46,6 @@ class BridgeTransactionParser {
         return bridgeTxs;
     }
     
-    // TODO: Add test case to verify that a search going beyond the best block should fail
     getBridgeTransactionsSinceThisBlock = async (startingBlockHashOrBlockNumber, blocksToSearch) => {
         utils.verifyHashOrBlockNumber(startingBlockHashOrBlockNumber);
     
