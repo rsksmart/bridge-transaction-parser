@@ -1,4 +1,4 @@
-const { getBridgeTransactionByTxHash } = require('../../index');
+const BridgeTransactionParser = require('../../index');
 const Bridge = require('@rsksmart/rsk-precompiled-abis-fingerroot500').bridge;
 const EventEmitter = require('node:events');
 const { MONITOR_EVENTS, defaultParamsValues } = require('./live-monitor-utils');
@@ -39,8 +39,10 @@ class LiveMonitor extends EventEmitter {
         this.isStarted = false;
         this.isStopped = false;
         this.isReset = false;
+
         if(params.network) {
             this.rskClient = new Web3(params.network);
+            this.bridgeTransactionParser = new BridgeTransactionParser(this.rskClient);
         }
     }
 
@@ -84,7 +86,7 @@ class LiveMonitor extends EventEmitter {
     
                     // Showing all bridge events by default if params.pegin and params.pegout where not specified
             
-                    const rskTx = await getBridgeTransactionByTxHash(this.rskClient, transaction.hash);
+                    const rskTx = await this.bridgeTransactionParser.getBridgeTransactionByTxHash(transaction.hash);
     
                     if(this.params.methods.length > 0 && !this.params.methods.includes(rskTx.method.name)) {
                         continue;
@@ -220,6 +222,7 @@ class LiveMonitor extends EventEmitter {
     setNetwork(network) {
         this.params.network = network;
         this.rskClient = new Web3(network);
+        this.bridgeTransactionParser = new BridgeTransactionParser(this.rskClient);
         return this;
     }
 
