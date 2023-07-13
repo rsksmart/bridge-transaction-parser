@@ -5,7 +5,7 @@ interface Transaction {
     txHash: string,
     method: BridgeMethod,
     events: BridgeEvent[],
-    from: string,
+    sender: string,
     blockNumber: number
 }
 
