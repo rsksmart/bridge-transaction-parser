@@ -1,7 +1,9 @@
+<img src="./rootstock_logo.png" alt="Rootstock" />
+
+# bridge-transaction-parser
 ![Github CI/CD](https://github.com/rsksmart/bridge-transaction-parser/actions/workflows/workflow.yml/badge.svg)
 [![CodeQL](https://github.com/rsksmart/bridge-transaction-parser/workflows/CodeQL/badge.svg)](https://github.com/rsksmart/bridge-transaction-parser/actions?query=workflow%3ACodeQL)
 
-# bridge-transaction-parser
 A tool to find interactions with the Bridge on Rootstock
 
 ## Prerequisites
@@ -203,6 +205,6 @@ const newParams = {
 monitor.reset(newParams);
 
 ```
-# Contributions
+## Contributing
 
 Any comments or suggestions feel free to contribute or reach out at our [open slack](https://dev.rootstock.io//slack).
