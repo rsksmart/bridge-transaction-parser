@@ -1,5 +1,5 @@
 {
-  "name": "bridge-transaction-parser",
+  "name": "@rsksmart/bridge-transaction-parser",
   "version": "0.7.0-beta",
   "description": "",
   "main": "index.js",
