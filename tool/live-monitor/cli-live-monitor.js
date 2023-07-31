@@ -28,6 +28,10 @@ const getParsedParams = () => {
 
 const params = getParsedParams();
 
+if(params.network === 'mainnet' || params.network === 'testnet') {
+    params.network = networkParser(params.network);
+}
+
 if(!params.network) {
     params.network = networkParser('testnet');
 }
