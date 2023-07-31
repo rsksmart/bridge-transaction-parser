@@ -88,8 +88,8 @@ It will continue to print as it finds new Bridge methods or events in the upcomi
 
 Available param options:
 
-* [--fromblock=number] defaults to `lastest`. If the block number is negative, it will be interpreted as the number of blocks before the latest block.
-* [--network=network] Expects a url host for a network. If passed the literal `mainnet` or `testnet` it will be parsed to the respective mainnet and testnet hosts (found in the `network-parser.js` file). Defaults to `testnet`.
+* [--fromblock=number] defaults to `latest`. If the block number is negative, it will be interpreted as the number of blocks before the latest block.
+* [--network=network] Expects a url host for a network. If passed the literal `mainnet` or `testnet` it will be parsed to the respective mainnet and testnet public nodes hosts (found in the `network-parser.js` file). Defaults to `testnet`.
 * [--pegin] if provided, prints peg-in related transactions. It can be used along `--pegout` to only print peg-in and peg-out related transactions.
 * [--pegout] if provided, prints peg-out related transactions  It can be used along `--pegin` to only print peg-in and peg-out related transactions.
 * [--methods="['bridgeMethod1', 'bridgeMethod2']"] prints transaction data of calls made to any of the specified bridge methods. Defaults to all Bridge methods.
