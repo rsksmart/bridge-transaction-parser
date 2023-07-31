@@ -88,13 +88,13 @@ It will continue to print as it finds new Bridge methods or events in the upcomi
 
 Available param options:
 
-* [--fromblock=number] defaults to `lastest`
-* [--network=network] defaults to `testnet`
-* [--pegin] if provided, prints peg-in related transactions. It can be used along `--pegout` to only print peg-in and peg-out related transactions
-* [--pegout] if provided, prints peg-out related transactions  It can be used along `--pegin` to only print peg-in and peg-out related transactions
-* [--methods="['bridgeMethod1', 'bridgeMethod2']"] prints transaction data of calls made to any of the specified bridge methods. Defaults to all Bridge methods
-* [--events="['bridgeEvent1', 'bridgeEvent2']"] prints transaction data of those that emitted any of these events. Defaults to all Bridge events
-* [--checkEveryMilliseconds=timeInMilliseconds] time between executions to get the next block to filter and print the transactions data. Defaults to 1000 milliseconds
+* [--fromblock=number] defaults to `lastest`. If the block number is negative, it will be interpreted as the number of blocks before the latest block.
+* [--network=network] Expects a url host for a network. If passed the literal `mainnet` or `testnet` it will be parsed to the respective mainnet and testnet hosts (found in the `network-parser.js` file). Defaults to `testnet`.
+* [--pegin] if provided, prints peg-in related transactions. It can be used along `--pegout` to only print peg-in and peg-out related transactions.
+* [--pegout] if provided, prints peg-out related transactions  It can be used along `--pegin` to only print peg-in and peg-out related transactions.
+* [--methods="['bridgeMethod1', 'bridgeMethod2']"] prints transaction data of calls made to any of the specified bridge methods. Defaults to all Bridge methods.
+* [--events="['bridgeEvent1', 'bridgeEvent2']"] prints transaction data of those that emitted any of these events. Defaults to all Bridge events.
+* [--checkEveryMilliseconds=timeInMilliseconds] time between executions to get the next block to filter and print the transactions data. Defaults to 1000 milliseconds.
 
 ### Samples with the command line
 
@@ -133,6 +133,12 @@ Only print the transaction data that contains the `updateCollections` method and
 > node tool/live-monitor/cli-live-monitor.js --fromblock=500 --methods="['updateCollections']" --events="['release_requested']" --network=http://127.0.0.1:30007 --checkEveryMilliseconds=60000
 
 If an unknown option parameter is passed, the tool will throw an exception.
+
+Using the `--fromblock` with a negative number:
+
+If the latest block number is something like 531 and we want to start searching 100 blocks before that (from 431), then we pass `-100` to the `--fromblock` flag, like this:
+
+> node tool/live-monitor/cli-live-monitor.js --fromblock=-100
 
 ### Samples with the exported `monitor` function
 
