@@ -1,6 +1,6 @@
 {
   "name": "@rsksmart/bridge-transaction-parser",
-  "version": "0.7.0-beta",
+  "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
