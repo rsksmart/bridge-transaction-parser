@@ -1,11 +1,11 @@
 const chai = require('chai')
-const assert = chai.assert;
 const chaiAsPromised = require('chai-as-promised');
-chai.use(chaiAsPromised);
-const {expect} = chai;
-
 const sinon = require('sinon');
 const rewire = require('rewire');
+
+const assert = chai.assert;
+chai.use(chaiAsPromised);
+const {expect} = chai;
 
 const bridgeTransactionParserModule = rewire('../index');
 const BridgeTransactionParser = bridgeTransactionParserModule.__get__('BridgeTransactionParser');
@@ -217,21 +217,50 @@ const blocksStub = [
             '0x6547e88a30d1b43c6fbea07fa7443dfeb697d076495c3e4fc56ebf40228e0431', // Not bridge transaction
             '0x7f6c029fba670f1ee14729e5531c672e813ac1ef4c86dec313b090119c14fa78', // Not bridge transaction
             '0x73a4d1592c5e922c2c6820985982d2715538717e4b4b52502685bc4c924300b7' // Bridge transaction
-        ]
+        ],
+        timestamp: 1683234772
     },
     {
         number: 1002,
         hash: '0xcdc8e7d4d5417ae5a36c6c246fa34df2ec0ebc9056055eeea401dc95e85e98f1',
         transactions: [
             '0x719715d6dc0617b6495d74aa4aa21b0755057ef6ad7cdcb71bdffcc2b3af4b24' // Not bridge transaction
-        ]
+        ],
+        timestamp: 1688764372
     },
     {
         number: 1003,
         hash: '0x5f4da1a8bc0f04fd1bca304cbfca19bbf618307a8855bfd71841428a83474f20',
         transactions: [
             '0x7a3c39f59e1f2c624602c9b54c28155a251963ec878049c0f78a7d281b2e3b87' // Bridge transaction
-        ]
+        ],
+        timestamp: 1694023972
+    },
+    {
+        number: 1004,
+        hash: '0x3c57396af7db18317efa29a3e4de1c4b66fe3f0e49b6236f62d30927d107d030',
+        transactions: [
+            '0x112439355294e02096078c3b77cb12546fe79d284f46d478b3584873c2bacb8b' // Bridge transaction
+        ],
+        timestamp: 1697289052
+    },
+    {
+        number: 1005,
+        hash: '0xa2ee5fddb10d16e9b1bf0e9e8afdf5cb4efd9e84d4d308ef4949da6068cd9d16',
+        transactions: [
+            '0x73a4d1592c5e922c2c6820985982d2715538717e4b4b52502685bc4c924300b7', // Bridge transaction
+            '0x6de85c65973ade9993a6f5c02603e979ac3c09dc18a3206421c2931d559b64ed' // Not bridge transaction
+        ],
+        timestamp: 1710421852
+    },
+    {
+        number: 1006,
+        hash: '0x3411a34eaf3c239595642db1225c34c137833672460d45afc4140e4d4aeaa390',
+        transactions: [
+            '0x7a3c39f59e1f2c624602c9b54c28155a251963ec878049c0f78a7d281b2e3b87', // Bridge transaction
+            '0xfd9012ec6b585186fabb8b48e75dca559be5e197ea776139cbf35816914a2dfa' // Not bridge transaction
+        ],
+        timestamp: 1754170133
     }
 ]
 
@@ -361,6 +390,7 @@ describe('Get Bridge transaction by tx hash', () => {
 
     it('Should verify and return Bridge transaction from tx hash', async () => {
         const txReceipt = txReceiptsStub[4];
+        const block = web3ClientStub.eth.getBlock(txReceipt.blockNumber);
         const result = await bridgeTransactionParser.getBridgeTransactionByTxHash(
             txReceipt.transactionHash
         );
@@ -368,6 +398,8 @@ describe('Get Bridge transaction by tx hash', () => {
         assert.equal(result.txHash, txReceipt.transactionHash);
         assert.equal(result.sender, txReceipt.from);
         assert.equal(result.blockNumber, txReceipt.blockNumber);
+        assert.equal(result.blockNumber, block.number);
+        assert.equal(result.blockTimestamp, block.timestamp);
 
         assert.equal(result.method.name, "updateCollections");
         assert.equal(result.method.signature, "0x0c5a9990");
@@ -468,7 +500,7 @@ describe('Get Bridge transactions from multiple blocks', () => {
             .to.be.rejectedWith('blocksToSearch must be greater than 0 or less than 100');
     });
 
-    it('Should Verify And Return Bridge Transactions From Blocks', async () => {
+    it('Should verify and return Bridge transactions from blocks', async () => {
         const startingBlockNumber = 1001;
         const blocksToSearch = 3;
         const result = await bridgeTransactionParser.getBridgeTransactionsSinceThisBlock(startingBlockNumber, blocksToSearch);

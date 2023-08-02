@@ -101,6 +101,7 @@ class BridgeTransactionParser {
         const txData = tx.input;
         const method = bridge._jsonInterface.find(i => i.signature === txData.substr(0, 10));
         const events = this.decodeLogs(txReceipt, bridge);
+        const block = await this.web3Client.eth.getBlock(txReceipt.blockNumber);
     
         let bridgeMethod = '';
         if (method) {
@@ -112,7 +113,8 @@ class BridgeTransactionParser {
             bridgeMethod, 
             events, 
             txReceipt.from, 
-            txReceipt.blockNumber
+            txReceipt.blockNumber,
+            block.timestamp
         );
     };
     
