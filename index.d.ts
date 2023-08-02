@@ -1,12 +1,13 @@
 import Web3 from "web3";
-import {TransactionReceipt, Transaction as Web3Transaction} from "web3-core";
+import { TransactionReceipt, Transaction as Web3Transaction } from "web3-core";
 
 interface Transaction {
     txHash: string,
     method: BridgeMethod,
     events: BridgeEvent[],
     sender: string,
-    blockNumber: number
+    blockNumber: number,
+    blockTimestamp: number
 }
 
 interface BridgeMethod {
@@ -58,6 +59,5 @@ export class BridgeTransactionParser {
      * @returns Object - A transaction object
      */
      decodeBridgeTransaction(web3Tx: Web3Transaction, bridgeTxReceipt: TransactionReceipt): Promise<Transaction>;
-
 }
 
