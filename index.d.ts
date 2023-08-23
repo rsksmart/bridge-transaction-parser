@@ -22,7 +22,7 @@ interface BridgeEvent {
     arguments: {}
 }
 
-export class BridgeTransactionParser {
+export default class BridgeTransactionParser {
 
     /**
      * 
