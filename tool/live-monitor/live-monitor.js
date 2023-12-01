@@ -144,6 +144,8 @@ class LiveMonitor extends EventEmitter {
                 this.emit(MONITOR_EVENTS.error, 'Network not provided. Exiting...');
                 return;
             }
+
+            this.setNetwork(this.params.network);
     
             const setup = async () => {
                 try {
