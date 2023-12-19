@@ -4,6 +4,8 @@ const EventEmitter = require('node:events');
 const { MONITOR_EVENTS, defaultParamsValues } = require('./live-monitor-utils');
 const Web3 = require('web3');
 
+const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
 const PEGOUT_METHOD_SIGNATURES = {
     releaseBtc: '0x',
     updateCollections: '0x0c5a9990',
@@ -37,8 +39,6 @@ class LiveMonitor extends EventEmitter {
         this.timer = null;
         this.latestBlockNumber = null;
         this.isStarted = false;
-        this.isStopped = false;
-        this.isReset = false;
 
         if(params.network) {
             this.rskClient = new Web3(params.network);
@@ -87,13 +87,18 @@ class LiveMonitor extends EventEmitter {
                     // Showing all bridge events by default if params.pegin and params.pegout where not specified
             
                     const rskTx = await this.bridgeTransactionParser.getBridgeTransactionByTxHash(transaction.hash);
+
+                    if(!rskTx) {
+                        console.error(`Tx ${transaction.hash} not found.`);
+                        continue;
+                    }
     
-                    if(this.params.methods.length > 0 && !this.params.methods.includes(rskTx.method.name)) {
+                    if(this.params.methods && this.params.methods.length > 0 && !this.params.methods.includes(rskTx.method.name)) {
                         continue;
                     }
     
                     const containsAtLeast1RequestedEvent = rskTx.events.some(event => this.params.events.includes(event.name));
-                    if(this.params.events.length > 0 && !containsAtLeast1RequestedEvent) {
+                    if(this.params.events && this.params.events.length > 0 && !containsAtLeast1RequestedEvent) {
                         continue;
                     }
     
@@ -123,6 +128,10 @@ class LiveMonitor extends EventEmitter {
 
     start(params) {
 
+        if(!params) {
+            throw new Error('Params not provided.');
+        }
+
         try {
             if(this.timer || this.isStarted) {
                 this.emit(MONITOR_EVENTS.error, 'Live monitor already started');
@@ -131,6 +140,14 @@ class LiveMonitor extends EventEmitter {
             
             if(params && params.network) {
                 this.rskClient = new Web3(params.network);
+            }
+
+            if(!params.events) {
+                params.events = [];
+            }
+
+            if(!params.methods) {
+                params.methods = [];
             }
     
             this.setParams(params);
@@ -163,17 +180,9 @@ class LiveMonitor extends EventEmitter {
                     }
         
                     this.isStarted = true;
-                    this.isStopped = false;
                     this.notified = false;
                     this.emit(MONITOR_EVENTS.started, 'Live monitor started');
-                    this.timer = setInterval(async () => {
-    
-                        // If the current block number is greater than the latest block number, then we need to update the latest block number
-                        if(this.currentBlockNumber > this.latestBlockNumber) {
-                            this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
-                        }
-                        this.check();
-                    }, this.params.checkEveryMilliseconds);
+                    this.startInterval();
                 } catch(error) {
                     this.emit(MONITOR_EVENTS.error, `There was an error trying to setup the live monitor: ${error.message}`);
                     console.error('There was an error trying to setup the live monitor', error);
@@ -184,20 +193,39 @@ class LiveMonitor extends EventEmitter {
     
         } catch(error) {
             this.emit(MONITOR_EVENTS.error, `There was an error trying to start the live monitor: ${error.message}`);
+            // Waiting a bit if there is an error to allow time for events to react in case the `checkEveryMilliseconds` is too low.
+            this.stopInterval();
+            wait(1000).then(() => this.startInterval());
             console.error(error);
         }
 
         return this;
     }
 
+    stopInterval() {
+        if(this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+    }
+
+    startInterval() {
+        this.timer = setInterval(async () => {
+            // If the current block number is greater than the latest block number, then we need to update the latest block number
+            if(this.currentBlockNumber > this.latestBlockNumber) {
+                this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
+            }
+            this.check();
+        }, this.params.checkEveryMilliseconds);
+    }
+
     stop() {
         try {
             if(this.timer) {
-                clearTimeout(this.timer);
+                clearInterval(this.timer);
                 this.timer = null;
             }
             this.isStarted = false;
-            this.hasStopped = true;
             this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped');
         } catch(error) {
             this.emit(MONITOR_EVENTS.error, `There was an error trying to stop the live monitor: ${error.message}`);
@@ -212,7 +240,6 @@ class LiveMonitor extends EventEmitter {
         this.currentBlockNumber = params.fromBlock;
         this.start(params);
         this.emit(MONITOR_EVENTS.reset, 'Live monitor reset');
-        this.hasReset = true;
         return this;
     }
 

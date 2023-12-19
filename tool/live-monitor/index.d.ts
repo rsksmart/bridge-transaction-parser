@@ -33,7 +33,7 @@ export interface BridgeTxDetails {
 }
 
 export default class LiveMonitor {
-    constructor(params?: LiveMonitorParam,);
+    constructor(params?: LiveMonitorParam);
     on(event: 'checkingBlock', listener: (blockNumber: number) => void): this;
     on(event: 'filterMatched', listener: (bridgeTx: BridgeTxDetails) => void): this;
     on(event: 'latestBlockReached', listener: (message: string) => void): this;
@@ -45,8 +45,6 @@ export default class LiveMonitor {
     start(params?: LiveMonitorParam): this;
     stop(): this;
     reset(params?: LiveMonitorParam): this;
-    check(): this;
+    check(): Promise<void>;
     isStarted: boolean;
-    isStopped: boolean;
-    isReset: boolean;
 }
