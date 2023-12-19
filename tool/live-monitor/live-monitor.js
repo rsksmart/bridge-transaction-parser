@@ -129,7 +129,7 @@ class LiveMonitor extends EventEmitter {
     start(params) {
 
         if(!params) {
-            throw new Error('Params not provided.');
+            params = this.params;
         }
 
         try {
@@ -236,6 +236,9 @@ class LiveMonitor extends EventEmitter {
     }
 
     reset(params) {
+        if(!params) {
+            params = this.params;
+        }
         this.stop();
         this.currentBlockNumber = params.fromBlock;
         this.start(params);
