@@ -215,16 +215,18 @@ class LiveMonitor extends EventEmitter {
             if(this.currentBlockNumber > this.latestBlockNumber) {
                 this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
             }
-            this.check();
+            if(this.isStarted) {
+                this.check();
+            } else {
+                console.log('Live monitor not started or is stopped. Ignoring call to check()...');
+                this.stopInterval();
+            }
         }, this.params.checkEveryMilliseconds);
     }
 
     stop() {
         try {
-            if(this.timer) {
-                clearInterval(this.timer);
-                this.timer = null;
-            }
+            this.stopInterval();
             this.isStarted = false;
             this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped');
         } catch(error) {
