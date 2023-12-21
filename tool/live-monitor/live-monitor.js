@@ -30,6 +30,8 @@ const isAPeginRelatedTransactionData = (data) => {
             .includes(methodSignature);
 };
 
+let attempts = 0;
+
 class LiveMonitor extends EventEmitter {
     constructor(params = {}) {
         super();
@@ -39,6 +41,7 @@ class LiveMonitor extends EventEmitter {
         this.timer = null;
         this.latestBlockNumber = null;
         this.isStarted = false;
+        this.toBlock = params.toBlock;
 
         if(params.network) {
             this.rskClient = new Web3(params.network);
@@ -48,8 +51,12 @@ class LiveMonitor extends EventEmitter {
 
     async check() {
 
-        try {
+        if(!this.isStarted) {
+            return;
+        }
 
+        try {
+            attempts++;
             if(this.latestBlockNumber < this.currentBlockNumber) {
                 if(!this.notified) {
                     this.emit(MONITOR_EVENTS.latestBlockReached, 'Latest block reached');
@@ -63,8 +70,6 @@ class LiveMonitor extends EventEmitter {
             const block = await this.rskClient.eth.getBlock(this.currentBlockNumber, true);
     
             this.emit(MONITOR_EVENTS.checkingBlock, block.number);
-    
-            this.currentBlockNumber++;
     
             for(const transaction of block.transactions) {
                 
@@ -118,11 +123,37 @@ class LiveMonitor extends EventEmitter {
                 }
     
             }
+
+            if(this.params.toBlock !== -1 && this.currentBlockNumber >= this.this.toBlock) {
+                this.emit(MONITOR_EVENTS.latestBlockReached, 'To block number reached. Exiting...');
+                this.isStarted = false;
+                return;
+            }
+
+            this.currentBlockNumber++;
+
+            attempts = 0;
     
+            await wait(this.checkEveryMilliseconds);
+
+            if(this.isStarted) {
+                this.check();
+            }
+
         } catch(error) {
-            const errorMessages = `There was an error trying to get the tx data/events in block: ${this.currentBlockNumber - 1}`;
-            this.emit(MONITOR_EVENTS.error, `${errorMessages}: ${error.message}\nMoving forward...`);
-            console.error(errorMessages, error);
+            if(this.params.keepTryingOnError && attempts < this.params.retryOnErrorAttempts) {
+                console.error(`There was an error trying to get the tx data/events in block: ${this.currentBlockNumber}. Attempt ${attempts} of ${this.params.retryOnErrorAttempts}.`);
+                await wait(this.checkEveryMilliseconds);
+                if(this.isStarted) {
+                    this.check();
+                }
+            } else {
+                const errorMessages = `There was an error trying to get the tx data/events in block: ${this.currentBlockNumber}`;
+                this.emit(MONITOR_EVENTS.error, `${errorMessages}: ${error.message}\nMoving forward with the next block ${this.currentBlockNumber + 1}...`);
+                console.error(errorMessages, error);
+                this.currentBlockNumber++;
+            }
+
         }
     }
 
@@ -134,7 +165,7 @@ class LiveMonitor extends EventEmitter {
 
         try {
             if(this.timer || this.isStarted) {
-                this.emit(MONITOR_EVENTS.error, 'Live monitor already started');
+                this.emit(MONITOR_EVENTS.error, 'Live monitor already started.');
                 return;
             }
             
@@ -173,6 +204,12 @@ class LiveMonitor extends EventEmitter {
                     } else {
                         this.currentBlockNumber = parseInt(this.currentBlockNumber);
                     }
+
+                    if(this.toBlock === 'latest') {
+                        this.toBlock = this.latestBlockNumber;
+                    } else {
+                        this.toBlock = parseInt(this.toBlock);
+                    }
                     
                     if(this.currentBlockNumber < 0) {
                         // If the block number is negative, it will be interpreted as the number of blocks before the latest block
@@ -182,51 +219,31 @@ class LiveMonitor extends EventEmitter {
                     this.isStarted = true;
                     this.notified = false;
                     this.emit(MONITOR_EVENTS.started, 'Live monitor started');
-                    this.startInterval();
+                    this.check();
                 } catch(error) {
-                    this.emit(MONITOR_EVENTS.error, `There was an error trying to setup the live monitor: ${error.message}`);
-                    console.error('There was an error trying to setup the live monitor', error);
+                    const message = `There was an error trying to setup the live monitor`;
+                    this.emit(MONITOR_EVENTS.error, `${message}: ${error.message}`);
+                    this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped due to error while setting up the monitor');
+                    console.error(message, error);
+                    this.isStarted = false;
                 }
             }
     
             setup();
     
         } catch(error) {
-            this.emit(MONITOR_EVENTS.error, `There was an error trying to start the live monitor: ${error.message}`);
-            // Waiting a bit if there is an error to allow time for events to react in case the `checkEveryMilliseconds` is too low.
-            this.stopInterval();
-            wait(1000).then(() => this.startInterval());
-            console.error(error);
+            const errorMessages = `There was an error trying to start the live monitor`;
+            this.emit(MONITOR_EVENTS.error, `There was an error trying to start the live monitor: ${error.message}. Stopping...`);
+            this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped due to error while starting the monitor');
+            console.error(errorMessages);
+            this.isStarted = false;
         }
 
         return this;
     }
 
-    stopInterval() {
-        if(this.timer) {
-            clearInterval(this.timer);
-            this.timer = null;
-        }
-    }
-
-    startInterval() {
-        this.timer = setInterval(async () => {
-            // If the current block number is greater than the latest block number, then we need to update the latest block number
-            if(this.currentBlockNumber > this.latestBlockNumber) {
-                this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
-            }
-            if(this.isStarted) {
-                this.check();
-            } else {
-                console.log('Live monitor not started or is stopped. Ignoring call to check()...');
-                this.stopInterval();
-            }
-        }, this.params.checkEveryMilliseconds);
-    }
-
     stop() {
         try {
-            this.stopInterval();
             this.isStarted = false;
             this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped');
         } catch(error) {

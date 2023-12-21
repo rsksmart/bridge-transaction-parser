@@ -6,6 +6,9 @@ export interface LiveMonitorParam {
     pegin: boolean;
     network: string;
     checkEveryMilliseconds: number;
+    retryOnError: boolean;
+    retryOnErrorAttempts: number;
+    toBlock: string | number;
 }
 
 export interface BridgeMethod {
