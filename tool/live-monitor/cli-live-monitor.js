@@ -6,7 +6,7 @@ const networkParser = require('../network-parser');
 const getParsedParams = () => {
     const params = process.argv.filter(param => param.startsWith('--'))
     .reduce((params, param) => {
-        if(param.startsWith('--fromblock')) {
+        if(param.startsWith('--fromBlock')) {
             params.fromBlock = param.slice(param.indexOf('=') + 1);
         } else if(param.startsWith('--methods') || param.startsWith('--events')) { // Parsing params that include an array
             const paramName = param.slice(2, param.indexOf('='));
@@ -18,6 +18,12 @@ const getParsedParams = () => {
             params[paramName] = true;
         } else if(param.startsWith('--checkEveryMilliseconds')) {
             params.checkEveryMilliseconds = Number(param.slice(param.indexOf('=') + 1)) || DEFAULT_CHECK_EVERY_MILLIS;
+        } else if(param.startsWith('--retryOnError')) {
+            params.retryOnError = param.slice(param.indexOf('=') + 1) === 'true';
+        } else if(param.startsWith('--retryOnErrorAttempts')) {
+            params.retryOnErrorAttempts = Number(param.slice(param.indexOf('=') + 1));
+        } else if(param.startsWith('--toBlock')) {
+            params.toBlock = Number(param.slice(param.indexOf('=') + 1));
         } else {
             throw new Error(`Parameter '${param}' not recognized`);
         }

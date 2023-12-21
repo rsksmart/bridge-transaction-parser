@@ -124,7 +124,7 @@ class LiveMonitor extends EventEmitter {
     
             }
 
-            if(this.params.toBlock !== -1 && this.currentBlockNumber >= this.toBlock) {
+            if(this.toBlock && this.params.toBlock !== -1 && this.currentBlockNumber >= this.toBlock) {
                 this.emit(MONITOR_EVENTS.latestBlockReached, 'To block number reached. Exiting...');
                 this.isStarted = false;
                 return;
@@ -207,8 +207,6 @@ class LiveMonitor extends EventEmitter {
 
                     if(this.toBlock === 'latest') {
                         this.toBlock = this.latestBlockNumber;
-                    } else {
-                        this.toBlock = parseInt(this.toBlock);
                     }
                     
                     if(this.currentBlockNumber < 0) {
