@@ -205,10 +205,10 @@ class LiveMonitor extends EventEmitter {
                         this.currentBlockNumber = parseInt(this.currentBlockNumber);
                     }
 
-                    if(this.toBlock === 'latest') {
+                    if(this.params.toBlock === 'latest') {
                         this.toBlock = this.latestBlockNumber;
                     } else {
-                        this.toBlock = Number(this.toBlock);
+                        this.toBlock = Number(this.params.toBlock);
                     }
 
                     if(this.currentBlockNumber < 0) {
