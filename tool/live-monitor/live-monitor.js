@@ -141,7 +141,7 @@ class LiveMonitor extends EventEmitter {
             }
 
         } catch(error) {
-            if(this.params.keepTryingOnError && attempts < this.params.retryOnErrorAttempts) {
+            if(this.params.retryOnError && attempts < this.params.retryOnErrorAttempts) {
                 console.error(`There was an error trying to get the tx data/events in block: ${this.currentBlockNumber}. Attempt ${attempts} of ${this.params.retryOnErrorAttempts}.`);
                 await wait(this.checkEveryMilliseconds);
                 if(this.isStarted) {
@@ -258,6 +258,7 @@ class LiveMonitor extends EventEmitter {
         if(!params) {
             params = this.params;
         }
+        attempts = 0;
         this.stop();
         this.currentBlockNumber = params.fromBlock;
         this.start(params);

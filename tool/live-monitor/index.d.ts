@@ -31,7 +31,6 @@ export interface BridgeTxDetails {
     to: string;
     method: BridgeMethod;
     events: BridgeEvent[];
-    keepTryingOnError: boolean;
     timestamp: number;
 }
 
