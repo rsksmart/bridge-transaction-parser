@@ -278,7 +278,7 @@ class LiveMonitor extends EventEmitter {
         return this;
     }
 
-    setMaxListeners(maxListeners) {
+    setEmitterMaxListeners(maxListeners) {
         this.setMaxListeners(maxListeners);
     }
 

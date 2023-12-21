@@ -49,5 +49,5 @@ export default class LiveMonitor {
     reset(params?: LiveMonitorParam): this;
     check(): Promise<void>;
     isStarted: boolean;
-    setMaxListeners: (maxListeners: number) => void;
+    setEmitterMaxListeners: (maxListeners: number) => void;
 }
