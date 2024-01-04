@@ -137,7 +137,11 @@ class LiveMonitor extends EventEmitter {
             await wait(this.checkEveryMilliseconds);
 
             if(this.isStarted) {
-                this.check();
+                this.timer = setTimeout(() => {
+                    if(this.isStarted) {
+                        this.check();
+                    }
+                }, this.checkEveryMilliseconds);
             }
 
         } catch(error) {
@@ -245,6 +249,7 @@ class LiveMonitor extends EventEmitter {
     stop() {
         try {
             this.isStarted = false;
+            clearTimeout(this.timer);
             this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped');
         } catch(error) {
             this.emit(MONITOR_EVENTS.error, `There was an error trying to stop the live monitor: ${error.message}`);
