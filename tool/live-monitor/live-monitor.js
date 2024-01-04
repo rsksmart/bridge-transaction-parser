@@ -4,8 +4,6 @@ const EventEmitter = require('node:events');
 const { MONITOR_EVENTS, defaultParamsValues } = require('./live-monitor-utils');
 const Web3 = require('web3');
 
-const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
-
 const PEGOUT_METHOD_SIGNATURES = {
     releaseBtc: '0x',
     updateCollections: '0x0c5a9990',
@@ -133,8 +131,6 @@ class LiveMonitor extends EventEmitter {
             this.currentBlockNumber++;
 
             attempts = 0;
-    
-            await wait(this.checkEveryMilliseconds);
 
             if(this.isStarted) {
                 this.timer = setTimeout(() => {
@@ -147,9 +143,12 @@ class LiveMonitor extends EventEmitter {
         } catch(error) {
             if(this.params.retryOnError && attempts < this.params.retryOnErrorAttempts) {
                 console.error(`There was an error trying to get the tx data/events in block: ${this.currentBlockNumber}. Attempt ${attempts} of ${this.params.retryOnErrorAttempts}.`);
-                await wait(this.checkEveryMilliseconds);
                 if(this.isStarted) {
-                    this.check();
+                    this.timer = setTimeout(() => {
+                        if(this.isStarted) {
+                            this.check();
+                        }
+                    }, this.checkEveryMilliseconds);
                 }
             } else {
                 const errorMessages = `There was an error trying to get the tx data/events in block: ${this.currentBlockNumber}`;
