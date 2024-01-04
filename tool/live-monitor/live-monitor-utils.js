@@ -18,7 +18,9 @@ const defaultParamsValues = {
     pegin: false,
     network: 'https://public-node.testnet.rsk.co/',
     checkEveryMilliseconds: DEFAULT_CHECK_EVERY_MILLIS,
-    keepTryingOnError: true,
+    retryOnError: true,
+    retryOnErrorAttempts: 3,
+    toBlock: -1,
 };
 
 module.exports = {

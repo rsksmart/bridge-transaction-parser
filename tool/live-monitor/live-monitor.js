@@ -28,6 +28,8 @@ const isAPeginRelatedTransactionData = (data) => {
             .includes(methodSignature);
 };
 
+let attempts = 0;
+
 class LiveMonitor extends EventEmitter {
     constructor(params = {}) {
         super();
@@ -37,8 +39,7 @@ class LiveMonitor extends EventEmitter {
         this.timer = null;
         this.latestBlockNumber = null;
         this.isStarted = false;
-        this.isStopped = false;
-        this.isReset = false;
+        this.toBlock = params.toBlock;
 
         if(params.network) {
             this.rskClient = new Web3(params.network);
@@ -48,8 +49,12 @@ class LiveMonitor extends EventEmitter {
 
     async check() {
 
-        try {
+        if(!this.isStarted) {
+            return;
+        }
 
+        try {
+            attempts++;
             if(this.latestBlockNumber < this.currentBlockNumber) {
                 if(!this.notified) {
                     this.emit(MONITOR_EVENTS.latestBlockReached, 'Latest block reached');
@@ -63,8 +68,6 @@ class LiveMonitor extends EventEmitter {
             const block = await this.rskClient.eth.getBlock(this.currentBlockNumber, true);
     
             this.emit(MONITOR_EVENTS.checkingBlock, block.number);
-    
-            this.currentBlockNumber++;
     
             for(const transaction of block.transactions) {
                 
@@ -87,13 +90,18 @@ class LiveMonitor extends EventEmitter {
                     // Showing all bridge events by default if params.pegin and params.pegout where not specified
             
                     const rskTx = await this.bridgeTransactionParser.getBridgeTransactionByTxHash(transaction.hash);
+
+                    if(!rskTx) {
+                        console.error(`Tx ${transaction.hash} not found.`);
+                        continue;
+                    }
     
-                    if(this.params.methods.length > 0 && !this.params.methods.includes(rskTx.method.name)) {
+                    if(this.params.methods && this.params.methods.length > 0 && !this.params.methods.includes(rskTx.method.name)) {
                         continue;
                     }
     
                     const containsAtLeast1RequestedEvent = rskTx.events.some(event => this.params.events.includes(event.name));
-                    if(this.params.events.length > 0 && !containsAtLeast1RequestedEvent) {
+                    if(this.params.events && this.params.events.length > 0 && !containsAtLeast1RequestedEvent) {
                         continue;
                     }
     
@@ -113,24 +121,67 @@ class LiveMonitor extends EventEmitter {
                 }
     
             }
-    
+
+            if(this.toBlock && this.toBlock !== -1 && this.currentBlockNumber >= this.toBlock) {
+                this.emit(MONITOR_EVENTS.latestBlockReached, 'To block number reached. Exiting...');
+                this.isStarted = false;
+                return;
+            }
+
+            this.currentBlockNumber++;
+
+            attempts = 0;
+
+            if(this.isStarted) {
+                this.timer = setTimeout(() => {
+                    if(this.isStarted) {
+                        this.check();
+                    }
+                }, this.checkEveryMilliseconds);
+            }
+
         } catch(error) {
-            const errorMessages = `There was an error trying to get the tx data/events in block: ${this.currentBlockNumber - 1}`;
-            this.emit(MONITOR_EVENTS.error, `${errorMessages}: ${error.message}\nMoving forward...`);
-            console.error(errorMessages, error);
+            if(this.params.retryOnError && attempts < this.params.retryOnErrorAttempts) {
+                console.error(`There was an error trying to get the tx data/events in block: ${this.currentBlockNumber}. Attempt ${attempts} of ${this.params.retryOnErrorAttempts}.`);
+                if(this.isStarted) {
+                    this.timer = setTimeout(() => {
+                        if(this.isStarted) {
+                            this.check();
+                        }
+                    }, this.checkEveryMilliseconds);
+                }
+            } else {
+                const errorMessages = `There was an error trying to get the tx data/events in block: ${this.currentBlockNumber}`;
+                this.emit(MONITOR_EVENTS.error, `${errorMessages}: ${error.message}\nMoving forward with the next block ${this.currentBlockNumber + 1}...`);
+                console.error(errorMessages, error);
+                this.currentBlockNumber++;
+            }
+
         }
     }
 
     start(params) {
 
+        if(!params) {
+            params = this.params;
+        }
+
         try {
             if(this.timer || this.isStarted) {
-                this.emit(MONITOR_EVENTS.error, 'Live monitor already started');
+                this.emit(MONITOR_EVENTS.error, 'Live monitor already started.');
                 return;
             }
             
             if(params && params.network) {
                 this.rskClient = new Web3(params.network);
+            }
+
+            if(!params.events) {
+                params.events = [];
+            }
+
+            if(!params.methods) {
+                params.methods = [];
             }
     
             this.setParams(params);
@@ -156,35 +207,39 @@ class LiveMonitor extends EventEmitter {
                     } else {
                         this.currentBlockNumber = parseInt(this.currentBlockNumber);
                     }
-                    
+
+                    if(this.params.toBlock === 'latest') {
+                        this.toBlock = this.latestBlockNumber;
+                    } else {
+                        this.toBlock = Number(this.params.toBlock);
+                    }
+
                     if(this.currentBlockNumber < 0) {
                         // If the block number is negative, it will be interpreted as the number of blocks before the latest block
                         this.currentBlockNumber = this.latestBlockNumber + this.currentBlockNumber;
                     }
         
                     this.isStarted = true;
-                    this.isStopped = false;
                     this.notified = false;
                     this.emit(MONITOR_EVENTS.started, 'Live monitor started');
-                    this.timer = setInterval(async () => {
-    
-                        // If the current block number is greater than the latest block number, then we need to update the latest block number
-                        if(this.currentBlockNumber > this.latestBlockNumber) {
-                            this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
-                        }
-                        this.check();
-                    }, this.params.checkEveryMilliseconds);
+                    this.check();
                 } catch(error) {
-                    this.emit(MONITOR_EVENTS.error, `There was an error trying to setup the live monitor: ${error.message}`);
-                    console.error('There was an error trying to setup the live monitor', error);
+                    const message = `There was an error trying to setup the live monitor`;
+                    this.emit(MONITOR_EVENTS.error, `${message}: ${error.message}`);
+                    this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped due to error while setting up the monitor');
+                    console.error(message, error);
+                    this.isStarted = false;
                 }
             }
     
             setup();
     
         } catch(error) {
-            this.emit(MONITOR_EVENTS.error, `There was an error trying to start the live monitor: ${error.message}`);
-            console.error(error);
+            const errorMessages = `There was an error trying to start the live monitor`;
+            this.emit(MONITOR_EVENTS.error, `There was an error trying to start the live monitor: ${error.message}. Stopping...`);
+            this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped due to error while starting the monitor');
+            console.error(errorMessages);
+            this.isStarted = false;
         }
 
         return this;
@@ -192,12 +247,9 @@ class LiveMonitor extends EventEmitter {
 
     stop() {
         try {
-            if(this.timer) {
-                clearTimeout(this.timer);
-                this.timer = null;
-            }
             this.isStarted = false;
-            this.hasStopped = true;
+            clearTimeout(this.timer);
+            this.timer = null;
             this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped');
         } catch(error) {
             this.emit(MONITOR_EVENTS.error, `There was an error trying to stop the live monitor: ${error.message}`);
@@ -208,11 +260,14 @@ class LiveMonitor extends EventEmitter {
     }
 
     reset(params) {
+        if(!params) {
+            params = this.params;
+        }
+        attempts = 0;
         this.stop();
         this.currentBlockNumber = params.fromBlock;
         this.start(params);
         this.emit(MONITOR_EVENTS.reset, 'Live monitor reset');
-        this.hasReset = true;
         return this;
     }
 
@@ -226,6 +281,10 @@ class LiveMonitor extends EventEmitter {
         this.rskClient = new Web3(network);
         this.bridgeTransactionParser = new BridgeTransactionParser(this.rskClient);
         return this;
+    }
+
+    setEmitterMaxListeners(maxListeners) {
+        this.setMaxListeners(maxListeners);
     }
 
 }

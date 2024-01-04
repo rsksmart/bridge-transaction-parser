@@ -86,7 +86,7 @@ It will continue to print as it finds new Bridge methods or events in the upcomi
 
 Available param options:
 
-* [--fromblock=number] defaults to `latest`. If the block number is negative, it will be interpreted as the number of blocks before the latest block.
+* [--fromBlock=number] defaults to `latest`. If the block number is negative, it will be interpreted as the number of blocks before the latest block.
 * [--network=network] Expects a url host for a network. If passed the literal `mainnet` or `testnet` it will be parsed to the respective mainnet and testnet public nodes hosts (found in the `network-parser.js` file). Defaults to `testnet`.
 * [--pegin] if provided, prints peg-in related transactions. It can be used along `--pegout` to only print peg-in and peg-out related transactions.
 * [--pegout] if provided, prints peg-out related transactions  It can be used along `--pegin` to only print peg-in and peg-out related transactions.
@@ -100,11 +100,11 @@ Note: All the options are optional and can be provided in any order
 
 Print all Bridge methods and events related transaction data starting at block `3,573,827` in `testnet`:
 
-> node tool/live-monitor/cli-live-monitor.js --fromblock=3574944 
+> node tool/live-monitor/cli-live-monitor.js --fromBlock=3574944 
 
 Print all the peg-out related transaction data from block `3,574,944 ` in a local node at `http://127.0.0.1:30007`:
 
-> node tool/live-monitor/cli-live-monitor.js --fromblock=3574944  --pegout --network=http://127.0.0.1:30007
+> node tool/live-monitor/cli-live-monitor.js --fromBlock=3574944  --pegout --network=http://127.0.0.1:30007
 
 Print all the transaction data that only has the `addSignature` method starting at the latest block in `testnet`:
 
@@ -116,7 +116,7 @@ Print all the transaction data only related to peg-ins and peg-outs in testnet:
 
 Only print peg-in related transaction data in testnet from block `3,575,114`:
 
-> node tool/live-monitor/cli-live-monitor.js --fromblock=3575114 --pegin
+> node tool/live-monitor/cli-live-monitor.js --fromBlock=3575114 --pegin
 
 Only print peg-out related transaction data in testnet:
 
@@ -124,19 +124,33 @@ Only print peg-out related transaction data in testnet:
 
 Only print the transaction data that contains the `updateCollections` method and the `release_requested` event starting at block `3,574,944 ` in `testnet`:
 
-> node tool/live-monitor/cli-live-monitor.js --fromblock=3574944  --methods="['updateCollections']" --events="['release_requested']"
+> node tool/live-monitor/cli-live-monitor.js --fromBlock=3574944  --methods="['updateCollections']" --events="['release_requested']"
 
 Only print the transaction data that contains the `updateCollections` method and the `release_requested` event starting at block `500` at host `http://127.0.0.1:30007` retrieving new blocks every minute:
 
-> node tool/live-monitor/cli-live-monitor.js --fromblock=500 --methods="['updateCollections']" --events="['release_requested']" --network=http://127.0.0.1:30007 --checkEveryMilliseconds=60000
+> node tool/live-monitor/cli-live-monitor.js --fromBlock=500 --methods="['updateCollections']" --events="['release_requested']" --network=http://127.0.0.1:30007 --checkEveryMilliseconds=60000
 
 If an unknown option parameter is passed, the tool will throw an exception.
 
-Using the `--fromblock` with a negative number:
+Using the `--fromBlock` with a negative number:
 
-If the latest block number is something like 531 and we want to start searching 100 blocks before that (from 431), then we pass `-100` to the `--fromblock` flag, like this:
+If the latest block number is something like 531 and we want to start searching 100 blocks before that (from 431), then we pass `-100` to the `--fromBlock` flag, like this:
 
-> node tool/live-monitor/cli-live-monitor.js --fromblock=-100
+> node tool/live-monitor/cli-live-monitor.js --fromBlock=-100
+
+The monitoring tool will keep retrying to get a block by default, 3 times. If you want to change that, you can try:
+
+> node tool/live-monitor/cli-live-monitor.js --retryOnError=false
+
+Or, if you want it to retry more times, for example to retry a maximum attepts of 10, try:
+
+> node tool/live-monitor/cli-live-monitor.js --retryOnErrorAttempts=10
+
+You can also specify a `toBlock` parameter.
+
+> node tool/live-monitor/cli-live-monitor.js --fromBlock=1000 --toBlock=1500
+
+If `toBlock` param is not provided, then the tool will continue to synch with new blocks.
 
 ### Samples with the exported `monitor` function
 
