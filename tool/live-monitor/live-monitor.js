@@ -247,15 +247,16 @@ class LiveMonitor extends EventEmitter {
 
     stop() {
         try {
-            this.isStarted = false;
-            clearTimeout(this.timer);
-            this.timer = null;
-            this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped');
+            if(this.isStarted || this.timer !== null) {
+                this.isStarted = false;
+                clearTimeout(this.timer);
+                this.timer = null;
+                this.emit(MONITOR_EVENTS.stopped, 'Live monitor stopped');
+            }
         } catch(error) {
             this.emit(MONITOR_EVENTS.error, `There was an error trying to stop the live monitor: ${error.message}`);
             console.error(error);
         }
-
         return this;
     }
 
