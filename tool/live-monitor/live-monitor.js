@@ -54,7 +54,11 @@ class LiveMonitor extends EventEmitter {
         }
 
         try {
+
             attempts++;
+            
+            this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
+
             if(this.latestBlockNumber < this.currentBlockNumber) {
                 if(!this.notified) {
                     this.emit(MONITOR_EVENTS.latestBlockReached, 'Latest block reached');
@@ -132,31 +136,24 @@ class LiveMonitor extends EventEmitter {
 
             attempts = 0;
 
-            if(this.isStarted) {
-                this.timer = setTimeout(() => {
-                    if(this.isStarted) {
-                        this.check();
-                    }
-                }, this.checkEveryMilliseconds);
-            }
-
         } catch(error) {
-            if(this.params.retryOnError && attempts < this.params.retryOnErrorAttempts) {
+            const shouldRetryToProcessSameBlock = this.params.retryOnError && attempts < this.params.retryOnErrorAttempts;
+            if(shouldRetryToProcessSameBlock) {
                 console.error(`There was an error trying to get the tx data/events in block: ${this.currentBlockNumber}. Attempt ${attempts} of ${this.params.retryOnErrorAttempts}.`);
-                if(this.isStarted) {
-                    this.timer = setTimeout(() => {
-                        if(this.isStarted) {
-                            this.check();
-                        }
-                    }, this.checkEveryMilliseconds);
-                }
             } else {
                 const errorMessages = `There was an error trying to get the tx data/events in block: ${this.currentBlockNumber}`;
                 this.emit(MONITOR_EVENTS.error, `${errorMessages}: ${error.message}\nMoving forward with the next block ${this.currentBlockNumber + 1}...`);
                 console.error(errorMessages, error);
                 this.currentBlockNumber++;
             }
-
+        } finally {
+            if(this.isStarted) {
+                this.timer = setTimeout(() => {
+                    if(this.isStarted) {
+                        this.check();
+                    }
+                }, this.params.checkEveryMilliseconds);
+            }
         }
     }
 
