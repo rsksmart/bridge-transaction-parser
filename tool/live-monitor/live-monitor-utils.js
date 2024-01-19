@@ -8,6 +8,7 @@ const MONITOR_EVENTS = {
     stopped: 'stopped',
     started: 'started',
     reset: 'reset',
+    toBlockReached: 'toBlockReached',
 };
 
 const defaultParamsValues = {

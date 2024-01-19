@@ -152,6 +152,8 @@ You can also specify a `toBlock` parameter.
 
 If `toBlock` param is not provided, then the tool will continue to synch with new blocks.
 
+If `toBlock` param is provided and the monitor reaches that block number, then the monitor will emit the `toBlockReached` event and stop.
+
 ### Samples with the exported `monitor` function
 
 ```js

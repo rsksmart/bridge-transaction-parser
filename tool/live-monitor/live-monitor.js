@@ -54,7 +54,11 @@ class LiveMonitor extends EventEmitter {
         }
 
         try {
+
             attempts++;
+            
+            this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
+
             if(this.latestBlockNumber < this.currentBlockNumber) {
                 if(!this.notified) {
                     this.emit(MONITOR_EVENTS.latestBlockReached, 'Latest block reached');
@@ -123,8 +127,8 @@ class LiveMonitor extends EventEmitter {
             }
 
             if(this.toBlock && this.toBlock !== -1 && this.currentBlockNumber >= this.toBlock) {
-                this.emit(MONITOR_EVENTS.latestBlockReached, 'To block number reached. Exiting...');
-                this.isStarted = false;
+                this.emit(MONITOR_EVENTS.toBlockReached, 'To block number reached. Stopping monitor...');
+                this.stop();
                 return;
             }
 
@@ -132,31 +136,24 @@ class LiveMonitor extends EventEmitter {
 
             attempts = 0;
 
-            if(this.isStarted) {
-                this.timer = setTimeout(() => {
-                    if(this.isStarted) {
-                        this.check();
-                    }
-                }, this.checkEveryMilliseconds);
-            }
-
         } catch(error) {
-            if(this.params.retryOnError && attempts < this.params.retryOnErrorAttempts) {
+            const shouldRetryToProcessSameBlock = this.params.retryOnError && attempts < this.params.retryOnErrorAttempts;
+            if(shouldRetryToProcessSameBlock) {
                 console.error(`There was an error trying to get the tx data/events in block: ${this.currentBlockNumber}. Attempt ${attempts} of ${this.params.retryOnErrorAttempts}.`);
-                if(this.isStarted) {
-                    this.timer = setTimeout(() => {
-                        if(this.isStarted) {
-                            this.check();
-                        }
-                    }, this.checkEveryMilliseconds);
-                }
             } else {
                 const errorMessages = `There was an error trying to get the tx data/events in block: ${this.currentBlockNumber}`;
                 this.emit(MONITOR_EVENTS.error, `${errorMessages}: ${error.message}\nMoving forward with the next block ${this.currentBlockNumber + 1}...`);
                 console.error(errorMessages, error);
                 this.currentBlockNumber++;
             }
-
+        } finally {
+            if(this.isStarted) {
+                this.timer = setTimeout(() => {
+                    if(this.isStarted) {
+                        this.check();
+                    }
+                }, this.params.checkEveryMilliseconds);
+            }
         }
     }
 
@@ -208,12 +205,14 @@ class LiveMonitor extends EventEmitter {
                         this.currentBlockNumber = parseInt(this.currentBlockNumber);
                     }
 
-                    if(this.params.toBlock === 'latest') {
-                        this.toBlock = this.latestBlockNumber;
-                    } else {
-                        this.toBlock = Number(this.params.toBlock);
+                    if(this.params.toBlock) {
+                        if(this.params.toBlock === 'latest') {
+                            this.toBlock = this.latestBlockNumber;
+                        } else {
+                            this.toBlock = Number(this.params.toBlock);
+                        }
                     }
-
+                    
                     if(this.currentBlockNumber < 0) {
                         // If the block number is negative, it will be interpreted as the number of blocks before the latest block
                         this.currentBlockNumber = this.latestBlockNumber + this.currentBlockNumber;
