@@ -221,6 +221,102 @@ const newParams = {
 monitor.reset(newParams);
 
 ```
+
+## Pegout Tracker
+
+You can use the `tool/pegout-tracker/pegout-tracker.js` to track a pegout request, from start to finish.
+
+To use it, you only need a pegout transaction hash and a network. Then, you can call `PegoutTarcker::trackPegout` and subscribe to the `PEGOUT_TRACKER_EVENTS.pegoutStagesFound` event, like this:
+
+```js
+const util = require('util');
+const PegoutTracker = require('./pegout-tracker');
+const { PEGOUT_TRACKER_EVENTS } = require('./pegout-tracker-utils');
+
+const pegoutTxHash = '0x...'; // Needs to be the tx hash that the user got when sending funds to the bridge to request a pegout.
+const network = 'mainnet'; // Can be 'mainnet' or 'testnet'
+
+const pegoutTracker = new PegoutTracker();
+
+// This will be executed once all the pegout information has been gathered.
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.pegoutStagesFound, bridgeTxDetails => {
+    console.info('pegoutStagesFound: ')
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.trackPegout(pegoutTxHash, network);
+
+```
+
+If no `network` is provided, `mainnet` will be the default.
+
+Or, you can subscribe to all the stages events, like this:
+
+```js
+
+const util = require('util');
+const PegoutTracker = require('./pegout-tracker');
+const { PEGOUT_TRACKER_EVENTS } = require('./pegout-tracker-utils');
+
+const pegoutTxHash = '0x...'; // Needs to be the tx hash that the user got when sending funds to the bridge to request a pegout.
+const network = 'mainnet'; // Can be 'mainnet' or 'testnet'
+
+const pegoutTracker = new PegoutTracker();
+
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.releaseRequestRejectedEventFound, bridgeTxDetails => {
+    console.info('Pegout stage 1 (pegout request rejected) transaction found: ');
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.releaseRequestReceivedEventFound, bridgeTxDetails => {
+    console.info('Pegout stage 1 (pegout request) transaction found: ');
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.releaseRequestedEventFound, bridgeTxDetails => {
+    console.info('Pegout stage 2 (pegout created) transaction found: ');
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.batchPegoutCreatedEventFound, bridgeTxDetails => {
+    console.info('Pegout stage 2 (batch pegout created) transaction found: ');
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.pegoutConfirmedEventFound, bridgeTxDetails => {
+    console.info('Pegout stage 3 (confirmations) transaction found: ');
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.addSignatureEventFound, bridgeTxDetails => {
+    console.info('Pegout stage 4 (signatures) transaction found: ');
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.releaseBtcEventFound, bridgeTxDetails => {
+    console.info('Pegout stage 4 (release) transaction found: ');
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.pegoutStagesFound, bridgeTxDetails => {
+    console.info('pegoutStagesFound: ')
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.trackPegout(pegoutTxHash, network);
+
+```
+
+Or, you can use the `cli-pegout-tracker` tool, like this:
+
+```sh
+node tool/pegout-tracker/cli-pegout-tracker.js --pegoutTxHash=0xa6397d264cae18a1b3ace7a33b24580fd759c075ee27feb7eb9e6d19f50ff3ee --network=mainnet
+```
+
+If no `--network` is provided, `mainnet` will be the default.
+
+Note: Before using the tool to find a pegout information, make sure the pegout has already been completed. Because the tool will try skiping blocks, will go to future blocks based on `nextPegoutHeight` and the amount of confirmations required for each network. If it tries to go to a non existing block, then the tool will throw an error.
+
 ## Contributing
 
 Any comments or suggestions feel free to contribute or reach out at our [open slack](https://dev.rootstock.io//slack).
