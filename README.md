@@ -315,7 +315,7 @@ node tool/pegout-tracker/cli-pegout-tracker.js --pegoutTxHash=0xa6397d264cae18a1
 
 If no `--network` is provided, `mainnet` will be the default.
 
-Note: Before using the tool to find a pegout information, make sure the pegout has already been completed. Because the tool will try skiping blocks, will go to future blocks based on `nextPegoutHeight` and the amount of confirmations required for each network. If it tries to go to a non existing block, then the tool will throw an error.
+Note: the pegout tracker tool skips bloks 2 times: 1, it skips the blocks in between the original pegout request block and the `nextPegoutCreationHeight`, becase we know there won't be any information about that pegout in between these ranges. 2, when the pagout is waiting for confirmations, it will skip to when the pegout will have enough confirmations to start searching for the `add_signature` events. If the `nextPegoutCreationHeight` and the future block when the pegout will have enough confirmation is greater than the latest block, then the tool will start searching from the latest block.
 
 ## Contributing
 
