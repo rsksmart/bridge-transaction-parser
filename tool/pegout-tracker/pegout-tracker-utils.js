@@ -12,6 +12,7 @@ const PEGOUT_TRACKER_EVENTS = {
 const NETWORK_REQUIRED_CONFIRMATIONS = {
     mainnet: 4000,
     testnet: 10,
+    regtest: 3,
 };
 
 module.exports = {

@@ -41,9 +41,10 @@ class PegoutTracker extends EventEmitter {
     /**
      * 
      * @param {string} pegoutTxHash 
-     * @param {mainnet | testnet} network 
+     * @param {Network} network 
+     * @param {Option} options
      */
-    async trackPegout(pegoutTxHash, network = 'mainnet') {
+    async trackPegout(pegoutTxHash, network = 'mainnet', options = {}) {
 
         if(!pegoutTxHash) {
             throw new Error('pegoutTxHash is required');
@@ -85,12 +86,14 @@ class PegoutTracker extends EventEmitter {
         const nextPegoutCreationHeight = getBridgeStorageValueDecodedToNumber(nextPegoutCreationHeightRlpEncoded);
 
         const latestBlockNumber = await rskClient.eth.getBlockNumber();
-
+        
+        let blockToStartSearchingFrom = nextPegoutCreationHeight;
         if(nextPegoutCreationHeight > latestBlockNumber) {
-            throw new Error(`Next pegout creation height ${nextPegoutCreationHeight} is greater than latest block number ${latestBlockNumber}`);
+            console.warn(`Next pegout creation height ${nextPegoutCreationHeight} is greater than latest block number ${latestBlockNumber}. Setting to latest block number.`);
+            blockToStartSearchingFrom = latestBlockNumber;
         }
 
-        const params = { ...defaultLiveMonitorParamsValues, network: networkUrl, fromBlock: nextPegoutCreationHeight };
+        const params = { ...defaultLiveMonitorParamsValues, network: networkUrl, fromBlock: blockToStartSearchingFrom };
 
         let stage = 2;
 
@@ -117,15 +120,19 @@ class PegoutTracker extends EventEmitter {
                             stage2BlockNumber = bridgeTxDetails.blockNumber;
                             stage2BtcTxHash = batchPegoutCreatedEventArguments.btcTxHash;
 
-                            const afterConfirmationBlock = stage2BlockNumber + NETWORK_REQUIRED_CONFIRMATIONS[network];
+                            const requiredConfirmations = NETWORK_REQUIRED_CONFIRMATIONS[network];
+
+                            const afterConfirmationBlock = stage2BlockNumber + requiredConfirmations;
 
                             const latestBlockNumber = await rskClient.eth.getBlockNumber();
 
+                            let blockToStartSearchingFrom = afterConfirmationBlock;
                             if(afterConfirmationBlock > latestBlockNumber) {
-                                throw new Error(`Expected after confirmation height ${afterConfirmationBlock} is greater than latest block number ${latestBlockNumber}`);
+                                console.warn(`Expected after confirmation height ${afterConfirmationBlock} is greater than latest block number ${latestBlockNumber}. Setting to latest block number.`);
+                                blockToStartSearchingFrom = latestBlockNumber;
                             }
 
-                            const newParams = { ...params, fromBlock: stage2BlockNumber + NETWORK_REQUIRED_CONFIRMATIONS[network] };
+                            const newParams = { ...params, fromBlock: blockToStartSearchingFrom };
                             liveMonitor.reset(newParams);
                             this.emit(PEGOUT_TRACKER_EVENTS.releaseRequestedEventFound, bridgeTxDetails);
                         }
