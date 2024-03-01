@@ -1,6 +1,8 @@
 const RLP = require('rlp');
 const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
 
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 const verifyHashOrBlockNumber = (blockHashOrBlockNumber) => {
     if (typeof blockHashOrBlockNumber === 'string' &&
         blockHashOrBlockNumber.indexOf('0x') === 0 &&
@@ -109,4 +111,5 @@ module.exports = {
     isReleaseBtcTx,
     bridgeStateKeysToStorageIndexMap,
     getBridgeStorageAtBlock,
+    wait,
 };

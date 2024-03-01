@@ -1,9 +1,11 @@
 
 const Web3 = require('web3');
+const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
 const BridgeTransactionParser = require('../../index');
 const EventEmitter = require('node:events');
 const LiveMonitor = require('../live-monitor/live-monitor');
 const { MONITOR_EVENTS } = require('../live-monitor/live-monitor-utils');
+const { wait } = require('../../utils');
 
 const { 
     isPegoutRequestRejectedTx,
@@ -46,6 +48,28 @@ const validateRequiredConfirmationsForCustomNetwork = (network, options) => {
     }
 };
 
+const isPegoutRequestTransaction = (tx) => {
+    return tx && tx.to === Bridge.address && (tx.input === '0x' || tx.input === '0x80af2871');
+};
+
+const isTransactionWaitingToBeMined = (tx) => {
+    return tx && tx.blockNumber === null;
+};
+
+const waitForTransactionToBeMined = async (web3, txHash, checkEveryMilliseconds = 1_000, maxAttempts = 60) => {
+    let tx = await web3.eth.getTransaction(txHash);
+    let attempt = 1;
+    while(isTransactionWaitingToBeMined(tx)) {
+        await wait(checkEveryMilliseconds);
+        tx = await web3.eth.getTransaction(txHash);
+        if(attempt > maxAttempts) {
+            throw new Error(`Transaction ${txHash} is taking too long to be mined. Tried ${attempt} times checking every ${checkEveryMilliseconds / 1000} seconds.`);
+        }
+        attempt++;
+    }
+    return tx;
+};
+
 class PegoutTracker extends EventEmitter {
 
     constructor() {
@@ -81,6 +105,13 @@ class PegoutTracker extends EventEmitter {
         const rskClient = new Web3(networkUrl);
 
         const bridgeTransactionParser = new BridgeTransactionParser(rskClient);
+
+        const tx = await rskClient.eth.getTransaction(pegoutTxHash);
+
+        if(isTransactionWaitingToBeMined(tx) && isPegoutRequestTransaction(tx)) {
+            console.warn(`The pegout request transaction with hash ${pegoutTxHash} has not been mined. Waiting for it to be mined...`);
+            await waitForTransactionToBeMined(rskClient, pegoutTxHash);
+        }
         
         const rskTx = await bridgeTransactionParser.getBridgeTransactionByTxHash(pegoutTxHash);
 
