@@ -40,6 +40,12 @@ const checkValidTransactionHash = (txHash) => {
     }
 };
 
+const validateRequiredConfirmationsForCustomNetwork = (network, options) => {
+    if(network.startsWith('http') && !options.requiredConfirmations) {
+        throw new Error('The "requiredConfirmations" option is required for custom networks.');
+    }
+};
+
 class PegoutTracker extends EventEmitter {
 
     constructor() {
@@ -51,8 +57,9 @@ class PegoutTracker extends EventEmitter {
      * 
      * @param {string} pegoutTxHash 
      * @param {Network} network
+     * @param {Options} options
      */
-    async trackPegout(pegoutTxHash, network = 'mainnet') {
+    async trackPegout(pegoutTxHash, network = 'mainnet', options = {}) {
 
         checkValidTransactionHash(pegoutTxHash);
 
@@ -68,6 +75,8 @@ class PegoutTracker extends EventEmitter {
         const pegoutInfo = [];
 
         const networkUrl = networkParser(network);
+
+        validateRequiredConfirmationsForCustomNetwork(network, options);
 
         const rskClient = new Web3(networkUrl);
 
@@ -126,7 +135,7 @@ class PegoutTracker extends EventEmitter {
                             stage2BlockNumber = bridgeTxDetails.blockNumber;
                             stage2BtcTxHash = batchPegoutCreatedEventArguments.btcTxHash;
 
-                            const requiredConfirmations = NETWORK_REQUIRED_CONFIRMATIONS[network];
+                            const requiredConfirmations = options.requiredConfirmations ? options.requiredConfirmations : NETWORK_REQUIRED_CONFIRMATIONS[network];
 
                             const afterConfirmationBlock = stage2BlockNumber + requiredConfirmations;
 

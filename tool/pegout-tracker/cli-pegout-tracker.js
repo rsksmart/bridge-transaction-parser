@@ -9,6 +9,8 @@ const getParsedParams = () => {
             params.pegoutTxHash = param.slice(param.indexOf('=') + 1);
         } else if(param.startsWith('--network')) {
             params.network = param.slice(param.indexOf('=') + 1);
+        } else if(param.startsWith('--requiredConfirmations')) {
+            params.requiredConfirmations = param.slice(param.indexOf('=') + 1);
         } 
         return params;
     }, {});
@@ -61,4 +63,6 @@ pegoutTracker.on(PEGOUT_TRACKER_EVENTS.pegoutStagesFound, bridgeTxDetails => {
     console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
 });
 
-pegoutTracker.trackPegout(pegoutTxHash, network);
+const options = params.requiredConfirmations ? { requiredConfirmations: params.requiredConfirmations } : {};
+
+pegoutTracker.trackPegout(pegoutTxHash, network, options);

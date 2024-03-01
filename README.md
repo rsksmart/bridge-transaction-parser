@@ -315,6 +315,15 @@ node tool/pegout-tracker/cli-pegout-tracker.js --pegoutTxHash=0xa6397d264cae18a1
 
 If no `--network` is provided, `mainnet` will be the default.
 
+To provide a custom network url, simply send `--network=http:...` or `--network=https:...`, like this:
+
+```sh
+node tool/pegout-tracker/cli-pegout-tracker.js --pegoutTxHash=0x78c2245bcf1953af4c8090dcd45f11c9e8dc20c4a2531370551b7283a02cf4c8 --network=http://127.0.0.1:4450 --requiredConfirmations=3
+```
+Notice that the value of a custom network has to start with either `http` or `https`. Otherwise, it will throw an error.
+
+The `--requiredConfirmations` param is required for custom networks, because custom networks can have a different value for the required confirmations. Not providing it while passing a network starting with `http` will cause an error.
+
 Note: the pegout tracker tool skips bloks 2 times: 1, it skips the blocks in between the original pegout request block and the `nextPegoutCreationHeight`, becase we know there won't be any information about that pegout in between these ranges. 2, when the pagout is waiting for confirmations, it will skip to when the pegout will have enough confirmations to start searching for the `add_signature` events. If the `nextPegoutCreationHeight` and the future block when the pegout will have enough confirmation is greater than the latest block, then the tool will start searching from the latest block.
 
 ## Contributing
