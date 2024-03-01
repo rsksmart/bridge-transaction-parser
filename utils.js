@@ -67,11 +67,11 @@ const getBridgeStorageValueDecodedToNumber = (bridgeStorageValueEncodedAsRlp) =>
 };
 
 const isPegoutRequestRejectedTx = (tx) => {
-    return tx && tx.method === '' && tx.events.length === 1 && tx.events[0].name === PEGOUT_EVENTS.release_request_rejected;
+    return tx && (tx.method === '' || tx.method.name === 'releaseBtc') && tx.events.length === 1 && tx.events[0].name === PEGOUT_EVENTS.release_request_rejected;
 };
 
 const isPegoutRequestReceivedTx = (tx) => {
-    return tx && tx.method === '' && tx.events.length === 1 && tx.events[0].name === PEGOUT_EVENTS.release_request_received;
+    return tx && (tx.method === '' || tx.method.name === 'releaseBtc') && tx.events.length === 1 && tx.events[0].name === PEGOUT_EVENTS.release_request_received;
 };
 
 const isPegoutCreatedTx = (tx) => {
