@@ -221,6 +221,111 @@ const newParams = {
 monitor.reset(newParams);
 
 ```
+
+## Pegout Tracker
+
+You can use the `tool/pegout-tracker/pegout-tracker.js` to track a pegout request, from start to finish.
+
+To use it, you only need a pegout transaction hash and a network. Then, you can call `PegoutTarcker::trackPegout` and subscribe to the `PEGOUT_TRACKER_EVENTS.pegoutStagesFound` event, like this:
+
+```js
+const util = require('util');
+const PegoutTracker = require('./pegout-tracker');
+const { PEGOUT_TRACKER_EVENTS } = require('./pegout-tracker-utils');
+
+const pegoutTxHash = '0x...'; // Needs to be the tx hash that the user got when sending funds to the bridge to request a pegout.
+const network = 'mainnet'; // Can be 'mainnet' or 'testnet'
+
+const pegoutTracker = new PegoutTracker();
+
+// This will be executed once all the pegout information has been gathered.
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.pegoutStagesFound, bridgeTxDetails => {
+    console.info('pegoutStagesFound: ')
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.trackPegout(pegoutTxHash, network);
+
+```
+
+If no `network` is provided, `mainnet` will be the default.
+
+Or, you can subscribe to all the stages events, like this:
+
+```js
+
+const util = require('util');
+const PegoutTracker = require('./pegout-tracker');
+const { PEGOUT_TRACKER_EVENTS } = require('./pegout-tracker-utils');
+
+const pegoutTxHash = '0x...'; // Needs to be the tx hash that the user got when sending funds to the bridge to request a pegout.
+const network = 'mainnet'; // Can be 'mainnet' or 'testnet'
+
+const pegoutTracker = new PegoutTracker();
+
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.releaseRequestRejectedEventFound, bridgeTxDetails => {
+    console.info('Pegout stage 1 (pegout request rejected) transaction found: ');
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.releaseRequestReceivedEventFound, bridgeTxDetails => {
+    console.info('Pegout stage 1 (pegout request) transaction found: ');
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.releaseRequestedEventFound, bridgeTxDetails => {
+    console.info('Pegout stage 2 (pegout created) transaction found: ');
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.batchPegoutCreatedEventFound, bridgeTxDetails => {
+    console.info('Pegout stage 2 (batch pegout created) transaction found: ');
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.pegoutConfirmedEventFound, bridgeTxDetails => {
+    console.info('Pegout stage 3 (confirmations) transaction found: ');
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.addSignatureEventFound, bridgeTxDetails => {
+    console.info('Pegout stage 4 (signatures) transaction found: ');
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.releaseBtcEventFound, bridgeTxDetails => {
+    console.info('Pegout stage 4 (release) transaction found: ');
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.on(PEGOUT_TRACKER_EVENTS.pegoutStagesFound, bridgeTxDetails => {
+    console.info('pegoutStagesFound: ')
+    console.info(util.inspect(bridgeTxDetails, {depth: null, colors: true}));
+});
+
+pegoutTracker.trackPegout(pegoutTxHash, network);
+
+```
+
+Or, you can use the `cli-pegout-tracker` tool, like this:
+
+```sh
+node tool/pegout-tracker/cli-pegout-tracker.js --pegoutTxHash=0xa6397d264cae18a1b3ace7a33b24580fd759c075ee27feb7eb9e6d19f50ff3ee --network=mainnet
+```
+
+If no `--network` is provided, `mainnet` will be the default.
+
+To provide a custom network url, simply send `--network=http:...` or `--network=https:...`, like this:
+
+```sh
+node tool/pegout-tracker/cli-pegout-tracker.js --pegoutTxHash=0x78c2245bcf1953af4c8090dcd45f11c9e8dc20c4a2531370551b7283a02cf4c8 --network=http://127.0.0.1:4450 --requiredConfirmations=3
+```
+Notice that the value of a custom network has to start with either `http` or `https`. Otherwise, it will throw an error.
+
+The `--requiredConfirmations` param is required for custom networks, because custom networks can have a different value for the required confirmations. Not providing it while passing a network starting with `http` will cause an error.
+
+Note: the pegout tracker tool skips bloks 2 times: 1, it skips the blocks in between the original pegout request block and the `nextPegoutCreationHeight`, becase we know there won't be any information about that pegout in between these ranges. 2, when the pagout is waiting for confirmations, it will skip to when the pegout will have enough confirmations to start searching for the `add_signature` events. If the `nextPegoutCreationHeight` and the future block when the pegout will have enough confirmation is greater than the latest block, then the tool will start searching from the latest block.
+
 ## Contributing
 
 Any comments or suggestions feel free to contribute or reach out at our [open slack](https://dev.rootstock.io//slack).
