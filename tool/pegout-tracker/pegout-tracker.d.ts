@@ -1,10 +1,6 @@
-type Options = {
-    regtestRequiredConfirmations: number;
-};
-
 type Network = 'mainnet' | 'testnet' | 'regtest';
 
 export default class PegoutTracker {
-    trackPegout(pegoutTxHash: string, network?: Network, options?: Options): Promise<void>;
+    trackPegout(pegoutTxHash: string, network?: Network): Promise<void>;
     stop(): void;
 }

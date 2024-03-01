@@ -31,6 +31,15 @@ const defaultLiveMonitorParamsValues = {
     retryOnErrorAttempts: 3,
 };
 
+const checkValidTransactionHash = (txHash) => {
+    if(!(typeof txHash === 'string')) {
+        throw new Error('The transaction hash is required and has to be a string.');
+    }
+    if(txHash.length !== 66 || !txHash.startsWith('0x')) {
+        throw new Error(`The transaction hash has to be 66 characters long, including the 0x prefix. "${txHash}" given.`);
+    }
+};
+
 class PegoutTracker extends EventEmitter {
 
     constructor() {
@@ -41,14 +50,11 @@ class PegoutTracker extends EventEmitter {
     /**
      * 
      * @param {string} pegoutTxHash 
-     * @param {Network} network 
-     * @param {Option} options
+     * @param {Network} network
      */
-    async trackPegout(pegoutTxHash, network = 'mainnet', options = {}) {
+    async trackPegout(pegoutTxHash, network = 'mainnet') {
 
-        if(!pegoutTxHash) {
-            throw new Error('pegoutTxHash is required');
-        }
+        checkValidTransactionHash(pegoutTxHash);
 
         if(this.started) {
             console.warn(`Pegout tracker is already started. Stop before calling ${trackPegout.name} again. Ignoring...`);
