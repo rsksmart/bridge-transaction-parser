@@ -15,7 +15,7 @@
   },
   "homepage": "https://github.com/rsksmart/bridge-transaction-parser#readme",
   "dependencies": {
-    "@rsksmart/rsk-precompiled-abis": "git+https://github.com/rsksmart/precompiled-abis#master"
+    "@rsksmart/rsk-precompiled-abis-lovell700": "git+https://github.com/rsksmart/precompiled-abis#master"
   },
   "author": "",
   "license": "MIT",
