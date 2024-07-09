@@ -30,6 +30,10 @@ const isAPeginRelatedTransactionData = (data) => {
 
 let attempts = 0;
 
+let cache = {};
+
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 class LiveMonitor extends EventEmitter {
     constructor(params = {}) {
         super();
@@ -47,19 +51,23 @@ class LiveMonitor extends EventEmitter {
         }
     }
 
-    async check() {
-
-        if(!this.isStarted) {
-            return;
-        }
+    async check(currentBlockNumber) {
 
         try {
+
+            if(!this.isStarted) {
+                return;
+            }
+
+            if(cache[currentBlockNumber]) {
+                return;
+            }
 
             attempts++;
             
             this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
 
-            if(this.latestBlockNumber < this.currentBlockNumber) {
+            if(this.latestBlockNumber < currentBlockNumber) {
                 if(!this.notified) {
                     this.emit(MONITOR_EVENTS.latestBlockReached, 'Latest block reached');
                     this.notified = true;
@@ -69,7 +77,7 @@ class LiveMonitor extends EventEmitter {
     
             this.notified = false;
     
-            const block = await this.rskClient.eth.getBlock(this.currentBlockNumber, true);
+            const block = await this.rskClient.eth.getBlock(currentBlockNumber, true);
     
             this.emit(MONITOR_EVENTS.checkingBlock, block.number);
     
@@ -80,19 +88,17 @@ class LiveMonitor extends EventEmitter {
                     const isPeginRelated = isAPeginRelatedTransactionData(transaction.input);
                     const isPegoutRelated = isAPegoutRelatedTransactionData(transaction.input);
     
-                    // Requested only pegouts, if tx is not a pegout then continue
+                    // Requested only pegouts, if tx is not a pegout then skip this transaction
                     if(!this.params.pegin && (this.params.pegout && !isPegoutRelated)) {
                         continue;
-                    // Requested only pegins, if tx is not a pegin then return
+                    // Requested only pegins, if tx is not a pegin then skip this transaction
                     } else if(!this.params.pegout && (this.params.pegin && !isPeginRelated)) {
                         continue;
-                    // Requested only pegins and pegouts, if tx is not a pegin or pegout then return
+                    // Requested only pegins and pegouts, if tx is not a pegin or pegout then skip this transaction
                     } else if((this.params.pegin && this.params.pegout) && (!isPeginRelated && !isPegoutRelated)) {
                         continue;
                     }
     
-                    // Showing all bridge events by default if params.pegin and params.pegout where not specified
-            
                     const rskTx = await this.bridgeTransactionParser.getBridgeTransactionByTxHash(transaction.hash);
 
                     if(!rskTx) {
@@ -126,35 +132,32 @@ class LiveMonitor extends EventEmitter {
     
             }
 
-            if(this.toBlock && this.toBlock !== -1 && this.currentBlockNumber >= this.toBlock) {
+            if(this.toBlock && this.toBlock !== -1 && currentBlockNumber >= this.toBlock) {
                 this.emit(MONITOR_EVENTS.toBlockReached, 'To block number reached. Stopping monitor...');
                 this.stop();
                 return;
             }
-
-            this.currentBlockNumber++;
-
+            
             attempts = 0;
 
         } catch(error) {
             const shouldRetryToProcessSameBlock = this.params.retryOnError && attempts < this.params.retryOnErrorAttempts;
             if(shouldRetryToProcessSameBlock) {
-                console.error(`There was an error trying to get the tx data/events in block: ${this.currentBlockNumber}. Attempt ${attempts} of ${this.params.retryOnErrorAttempts}.`);
+                console.error(`There was an error trying to get the tx data/events in block: ${currentBlockNumber}. Attempt ${attempts} of ${this.params.retryOnErrorAttempts}.`);
+                await wait(this.params.checkEveryMilliseconds);
+                this.check(currentBlockNumber);
+                return;
             } else {
-                const errorMessages = `There was an error trying to get the tx data/events in block: ${this.currentBlockNumber}`;
-                this.emit(MONITOR_EVENTS.error, `${errorMessages}: ${error.message}\nMoving forward with the next block ${this.currentBlockNumber + 1}...`);
+                const errorMessages = `There was an error trying to get the tx data/events in block: ${currentBlockNumber}`;
+                this.emit(MONITOR_EVENTS.error, `${errorMessages}: ${error.message}\nMoving forward with the next block ${currentBlockNumber + 1}...`);
                 console.error(errorMessages, error);
-                this.currentBlockNumber++;
-            }
-        } finally {
-            if(this.isStarted) {
-                this.timer = setTimeout(() => {
-                    if(this.isStarted) {
-                        this.check();
-                    }
-                }, this.params.checkEveryMilliseconds);
             }
         }
+
+        cache[currentBlockNumber] = true;
+        await wait(this.params.checkEveryMilliseconds);
+        this.check(currentBlockNumber + 1);
+        
     }
 
     start(params) {
@@ -198,11 +201,13 @@ class LiveMonitor extends EventEmitter {
             const setup = async () => {
                 try {
                     this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
+
+                    let currentBlockNumber = this.currentBlockNumber;
     
-                    if(this.currentBlockNumber === 'latest') {
-                        this.currentBlockNumber = this.latestBlockNumber;
+                    if(currentBlockNumber === 'latest') {
+                        currentBlockNumber = this.latestBlockNumber;
                     } else {
-                        this.currentBlockNumber = parseInt(this.currentBlockNumber);
+                        currentBlockNumber = parseInt(currentBlockNumber);
                     }
 
                     if(this.params.toBlock) {
@@ -213,15 +218,15 @@ class LiveMonitor extends EventEmitter {
                         }
                     }
                     
-                    if(this.currentBlockNumber < 0) {
+                    if(currentBlockNumber < 0) {
                         // If the block number is negative, it will be interpreted as the number of blocks before the latest block
-                        this.currentBlockNumber = this.latestBlockNumber + this.currentBlockNumber;
+                        currentBlockNumber = this.latestBlockNumber + currentBlockNumber;
                     }
         
                     this.isStarted = true;
                     this.notified = false;
                     this.emit(MONITOR_EVENTS.started, 'Live monitor started');
-                    this.check();
+                    this.check(currentBlockNumber);
                 } catch(error) {
                     const message = `There was an error trying to setup the live monitor`;
                     this.emit(MONITOR_EVENTS.error, `${message}: ${error.message}`);
@@ -246,6 +251,7 @@ class LiveMonitor extends EventEmitter {
 
     stop() {
         try {
+            cache = {};
             if(this.isStarted || this.timer !== null) {
                 this.isStarted = false;
                 clearTimeout(this.timer);
