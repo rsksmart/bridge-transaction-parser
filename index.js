@@ -1,4 +1,4 @@
-const Bridge = require('@rsksmart/rsk-precompiled-abis-lovell700').bridge;
+const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
 const BridgeTx = require("./BridgeTx");
 const BridgeMethod = require("./BridgeMethod");
 const BridgeEvent = require("./BridgeEvent");
