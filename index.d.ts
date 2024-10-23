@@ -22,6 +22,19 @@ interface BridgeEvent {
     arguments: {}
 }
 
+export interface Log {
+    data: string;
+    topics: string[];
+};
+
+export interface AbiElement {
+    type: string;
+    name: string;
+    inputs: {name: string, type: string}[];
+    outputs: {name: string, type: string}[];
+    signature: string;
+}
+
 export default class BridgeTransactionParser {
 
     /**
@@ -59,5 +72,21 @@ export default class BridgeTransactionParser {
      * @returns Object - A transaction object
      */
      decodeBridgeTransaction(web3Tx: Web3Transaction, bridgeTxReceipt: TransactionReceipt): Promise<Transaction>;
+
+     /**
+      * Decodes logs from a transaction receipt
+      * @param txReceipt 
+      * @return {BridgeEvent[]}
+      */
+     decodeLogs(txReceipt: TransactionReceipt): BridgeEvent[];
+
+     /**
+     * Decodes a log data using the given abiElement
+     * @param {Log} log
+     * @param {AbiElement} abiElement 
+     * @returns {BridgeEvent}
+     */
+     decodeLog(log: Log, abiElement: AbiElement): BridgeEvent;
+
 }
 
