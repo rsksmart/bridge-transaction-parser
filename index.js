@@ -11,6 +11,11 @@ class BridgeTransactionParser {
             throw new Error(`web3Client is required`);
         }
         this.web3Client = web3Client;
+        this.bridge = Bridge.build(this.web3Client);
+        this.jsonInterfaceMap = this.bridge._jsonInterface.reduce((map, item) => {
+            map[item.signature] = item;
+            return map;
+        }, {});
     }
 
     getBridgeTransactionByTxHash = async (transactionHash) => {
@@ -18,11 +23,9 @@ class BridgeTransactionParser {
     
         let transaction;
         const txReceipt = await this.web3Client.eth.getTransactionReceipt(transactionHash);
-        
         if (txReceipt?.to === Bridge.address) {
-            const bridge = Bridge.build(this.web3Client);
             const tx = await this.web3Client.eth.getTransaction(txReceipt.transactionHash);
-            transaction = await this.createBridgeTx(bridge, tx, txReceipt);
+            transaction = await this.createBridgeTx(tx, txReceipt);
         }
         
         return transaction;
@@ -76,8 +79,7 @@ class BridgeTransactionParser {
             throw new Error(`Given bridgeTxReceipt is not a bridge transaction`);
         }
     
-        const bridge = Bridge.build(this.web3Client);
-        return this.createBridgeTx(bridge, bridgeTx, bridgeTxReceipt);
+        return this.createBridgeTx(bridgeTx, bridgeTxReceipt);
     }
     
     decodeBridgeMethodParameters = (methodName, data) => {
@@ -97,10 +99,10 @@ class BridgeTransactionParser {
         return args;
     }
     
-    createBridgeTx = async (bridge, tx, txReceipt) => {
+    createBridgeTx = async (tx, txReceipt) => {
         const txData = tx.input;
-        const method = bridge._jsonInterface.find(i => i.signature === txData.substr(0, 10));
-        const events = this.decodeLogs(txReceipt, bridge);
+        const method =  this.jsonInterfaceMap[txData.substring(0, 10)];
+        const events = this.decodeLogs(txReceipt);
         const block = await this.web3Client.eth.getBlock(txReceipt.blockNumber);
     
         let bridgeMethod = '';
@@ -118,30 +120,34 @@ class BridgeTransactionParser {
         );
     };
     
-    decodeLogs = (tx, bridge) => {
+    decodeLogs = (txReceipt) => {
         const events = [];
-        for (let txLog of tx.logs) {
-            const bridgeEvent = bridge._jsonInterface.find(i => i.signature === txLog.topics[0]);
-            
-            if (bridgeEvent) {
-                const args = {};
-                const dataDecoded = this.web3Client.eth.abi.decodeParameters(bridgeEvent.inputs.filter(i => !i.indexed), txLog.data);
-                let topicIndex = 1;
-                for (let input of bridgeEvent.inputs) {
-                    let value;
-                    if (input.indexed) {
-                        value = this.web3Client.eth.abi.decodeParameter(input.type, txLog.topics[topicIndex]);
-                        topicIndex++;
-                    } else {
-                        value = dataDecoded[input.name];
-                    }
-                    args[input.name] = value;
-                }
-                events.push(new BridgeEvent(bridgeEvent.name, bridgeEvent.signature, args));
+        for (let log of txReceipt.logs) {
+            const abiElement = this.jsonInterfaceMap[log.topics[0]];
+            if(!abiElement) {
+                continue;
             }
+            const event = this.decodeLog(log, abiElement);
+            events.push(event);
         }
-    
         return events;
+    }
+
+    decodeLog = (log, abiElement) => {
+        const args = {};
+        const dataDecoded = this.web3Client.eth.abi.decodeParameters(abiElement.inputs.filter(i => !i.indexed), log.data);
+        let topicIndex = 1;
+        for (let input of abiElement.inputs) {
+            let value;
+            if (input.indexed) {
+                value = this.web3Client.eth.abi.decodeParameter(input.type, log.topics[topicIndex]);
+                topicIndex++;
+            } else {
+                value = dataDecoded[input.name];
+            }
+            args[input.name] = value;
+        }
+        return new BridgeEvent(abiElement.name, abiElement.signature, args);
     }
 
 }
