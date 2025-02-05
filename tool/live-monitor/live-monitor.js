@@ -2,7 +2,6 @@ const BridgeTransactionParser = require('../../index');
 const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
 const EventEmitter = require('node:events');
 const { MONITOR_EVENTS, defaultParamsValues } = require('./live-monitor-utils');
-const Web3 = require('web3');
 
 const PEGOUT_METHOD_SIGNATURES = {
     releaseBtc: '0x',
@@ -40,10 +39,9 @@ class LiveMonitor extends EventEmitter {
         this.latestBlockNumber = null;
         this.isStarted = false;
         this.toBlock = params.toBlock;
-
+        
         if(params.network) {
-            this.rskClient = new Web3(params.network);
-            this.bridgeTransactionParser = new BridgeTransactionParser(this.rskClient);
+            this.bridgeTransactionParser = new BridgeTransactionParser(params.network);
         }
     }
 
@@ -57,7 +55,9 @@ class LiveMonitor extends EventEmitter {
 
             attempts++;
             
-            this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
+            this.latestBlockNumber = await this.bridgeTransactionParser.provider.getBlockNumber();
+
+            console.log('this.latestBlockNumber: ', this.latestBlockNumber)
 
             if(this.latestBlockNumber < this.currentBlockNumber) {
                 if(!this.notified) {
@@ -68,17 +68,20 @@ class LiveMonitor extends EventEmitter {
             }
     
             this.notified = false;
-    
-            const block = await this.rskClient.eth.getBlock(this.currentBlockNumber, true);
+
+            const block = await this.bridgeTransactionParser.provider.getBlock(this.currentBlockNumber);
+            const transactions = await Promise.all(block.transactions.map(txHash => this.bridgeTransactionParser.provider.getTransaction(txHash)));
     
             this.emit(MONITOR_EVENTS.checkingBlock, block.number);
     
-            for(const transaction of block.transactions) {
+            for(const transaction of transactions) {
                 
                 if(transaction.to === Bridge.address) {
+
+                    console.log('transaction.hash: ', transaction.hash)
     
-                    const isPeginRelated = isAPeginRelatedTransactionData(transaction.input);
-                    const isPegoutRelated = isAPegoutRelatedTransactionData(transaction.input);
+                    const isPeginRelated = isAPeginRelatedTransactionData(transaction.data);
+                    const isPegoutRelated = isAPegoutRelatedTransactionData(transaction.data);
     
                     // Requested only pegouts, if tx is not a pegout then continue
                     if(!this.params.pegin && (this.params.pegout && !isPegoutRelated)) {
@@ -170,7 +173,7 @@ class LiveMonitor extends EventEmitter {
             }
             
             if(params && params.network) {
-                this.rskClient = new Web3(params.network);
+                this.bridgeTransactionParser = new BridgeTransactionParser(params.network);
             }
 
             if(!params.events) {
@@ -197,7 +200,7 @@ class LiveMonitor extends EventEmitter {
     
             const setup = async () => {
                 try {
-                    this.latestBlockNumber = await this.rskClient.eth.getBlockNumber();
+                    this.latestBlockNumber = await this.bridgeTransactionParser.provider.getBlockNumber();
     
                     if(this.currentBlockNumber === 'latest') {
                         this.currentBlockNumber = this.latestBlockNumber;
@@ -278,8 +281,7 @@ class LiveMonitor extends EventEmitter {
 
     setNetwork(network) {
         this.params.network = network;
-        this.rskClient = new Web3(network);
-        this.bridgeTransactionParser = new BridgeTransactionParser(this.rskClient);
+        this.bridgeTransactionParser = new BridgeTransactionParser(network);
         return this;
     }
 

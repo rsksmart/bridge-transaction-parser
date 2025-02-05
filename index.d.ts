@@ -1,5 +1,4 @@
-import Web3 from "web3";
-import { TransactionReceipt, Transaction as Web3Transaction } from "web3-core";
+import { TransactionResponse, TransactionReceipt } from "ethers";
 
 interface Transaction {
     txHash: string,
@@ -27,7 +26,7 @@ export interface Log {
     topics: string[];
 };
 
-export interface AbiElement {
+export interface AbiFragment {
     type: string;
     name: string;
     inputs: {name: string, type: string}[];
@@ -39,9 +38,9 @@ export default class BridgeTransactionParser {
 
     /**
      * 
-     * @param web3Client Web3 Instance
+     * @param networkUrl
      */
-    constructor(web3Client: Web3);
+    constructor(networkUrl: string);
 
     /**
      * Gets Bridge Transactions In a Specified Block Hash Or Block Number
@@ -66,12 +65,12 @@ export default class BridgeTransactionParser {
     getBridgeTransactionByTxHash(transactionHash: string): Promise<Transaction>;
 
     /**
-     * Gets a Bridge Transaction given a web3 transaction: web3TransactionObject and a bridgeTxReceipt: TransactionReceipt.
-     * @param web3Tx The web3TransactionObject.
-     * @param bridgeTxReceipt The bridgeTxReceipt: web3TransactionReceiptObject.
+     * Gets a Bridge Transaction given an ethers transaction: TransactionResponse Object and a txReceipt: TransactionReceipt.
+     * @param ethersTx The TransactionResponse Object.
+     * @param bridgeTxReceipt The bridgeTxReceipt: TransactionResponse ReceiptObject.
      * @returns Object - A transaction object
      */
-     decodeBridgeTransaction(web3Tx: Web3Transaction, bridgeTxReceipt: TransactionReceipt): Promise<Transaction>;
+     decodeBridgeTransaction(ethersTx: TransactionResponse, txReceipt: TransactionReceipt): Promise<Transaction>;
 
      /**
       * Decodes logs from a transaction receipt
@@ -81,12 +80,12 @@ export default class BridgeTransactionParser {
      decodeLogs(txReceipt: TransactionReceipt): BridgeEvent[];
 
      /**
-     * Decodes a log data using the given abiElement
+     * Decodes a log data using the given abiFragment
      * @param {Log} log
-     * @param {AbiElement} abiElement 
+     * @param {AbiFragment} eventFragment 
      * @returns {BridgeEvent}
      */
-     decodeLog(log: Log, abiElement: AbiElement): BridgeEvent;
+     decodeLog(log: Log, eventFragment: AbiFragment): BridgeEvent;
 
 }
 
