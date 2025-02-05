@@ -1,17 +1,18 @@
-const Web3 = require('web3');
+const ethers = require('ethers');
 const networkParser = require('./network-parser');
 const BridgeTransactionParser = require('../index');
 
 (async () => {
     try {
-        const network = process.argv[2];
-        const web3Client = new Web3(networkParser(network));
-        const bridgeTransactionParser = new BridgeTransactionParser(web3Client);
+        const network = networkParser(process.argv[2]);
+        const bridgeTransactionParser = new BridgeTransactionParser(network);
         const transactionHash = process.argv[3]; // Format: 0x73a4d1592c5e922c2c6820985982d2715538717e4b4b52502685bc4c924300b7
         const transaction = await bridgeTransactionParser.getBridgeTransactionByTxHash(transactionHash)
         
         if (transaction) {
-            console.log(JSON.stringify(transaction, null, 2));
+            console.log(JSON.stringify(transaction, (key, value) =>
+                typeof value === "bigint" ? value.toString() : value, 2
+            ));
         } else {
             console.log(`Tx ${transactionHash} not found or not a Bridge transaction`);
         }
