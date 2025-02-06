@@ -1,17 +1,14 @@
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised');
-const sinon = require('sinon');
-const rewire = require('rewire');
+const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
+const BridgeTransactionParser = require('../index');
 
 const assert = chai.assert;
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-const bridgeTransactionParserModule = rewire('../index');
-const BridgeTransactionParser = bridgeTransactionParserModule.__get__('BridgeTransactionParser');
-
 const bridgeInstanceStub = {
-    _address: '0x0000000000000000000000000000000001000006',
+    _address: Bridge.address,
     _jsonInterface: [
         {
             name: 'updateCollections',
@@ -71,34 +68,6 @@ const bridgeInstanceStub = {
         }
     ]
 };
-
-const bridgeStub = {
-    build: () => {
-        return bridgeInstanceStub
-    },
-    address: '0x0000000000000000000000000000000001000006',
-    abi: [
-        {
-            name: 'updateCollections',
-            inputs: [],
-            signature: '0x0c5a9990'
-        },
-        {
-            name: 'commitFederation',
-            inputs: [
-                {
-                    name: 'hash',
-                    type: 'bytes'
-                }
-            ],
-            signature: '0x1533330f'
-        }
-    ]
-};
-
-bridgeTransactionParserModule.__set__({
-    'Bridge': bridgeStub
-});
 
 const txReceiptsStub = [
     // Non Bridge transactions
@@ -320,7 +289,13 @@ const dataDecodedResults = [
         data: '0x00000000000000000000000075d7b75612ed7a0edc70ceced86a9701e8d07d6a',
         decoded: '0x75d7B75612Ed7A0eDc70ceCED86A9701E8D07D6a'
     }
-]
+];
+
+function Contract (abi, address) {
+    expect(abi).to.deep.equal(Bridge.abi);
+    expect(address).to.equal(Bridge.address);
+    return bridgeInstanceStub;
+}
 
 const web3ClientStub = {
     eth: ({
@@ -340,7 +315,8 @@ const web3ClientStub = {
             decodeParameters: (inputs, data) => {
                 return dataDecodedResults.find(result => result.data === data)?.decoded;
             }
-        })
+        }),
+        Contract,
     })
 };
 
@@ -361,18 +337,10 @@ describe('Constructor', () => {
 
 describe('Get Bridge transaction by tx hash', () => {
 
-    let sandbox;
     let bridgeTransactionParser;
 
-    beforeEach((done) => {
+    beforeEach(() => {
         bridgeTransactionParser = new BridgeTransactionParser(web3ClientStub);
-        sandbox = sinon.createSandbox();
-        done();
-    });
-
-    afterEach((done) => {
-        sandbox.restore();
-        done();
     });
 
     it('Should fail for invalid transaction hash', async () => {
@@ -425,18 +393,10 @@ describe('Get Bridge transaction by tx hash', () => {
 
 describe('Get Bridge transactions from single block', () => {
 
-    let sandbox;
     let bridgeTransactionParser;
 
-    beforeEach((done) => {
+    beforeEach(() => {
         bridgeTransactionParser = new BridgeTransactionParser(web3ClientStub);
-        sandbox = sinon.createSandbox();
-        done();
-    });
-
-    afterEach((done) => {
-        sandbox.restore();
-        done();
     });
 
     it('Should fail for invalid block number', async () => {
@@ -474,18 +434,10 @@ describe('Get Bridge transactions from single block', () => {
 
 describe('Get Bridge transactions from multiple blocks', () => {
 
-    let sandbox;
     let bridgeTransactionParser;
 
-    beforeEach((done) => {
+    beforeEach(() => {
         bridgeTransactionParser = new BridgeTransactionParser(web3ClientStub);
-        sandbox = sinon.createSandbox();
-        done();
-    });
-
-    afterEach((done) => {
-        sandbox.restore();
-        done();
     });
 
     it('Should fail for invalid start block number', async () => {
@@ -514,18 +466,10 @@ describe('Get Bridge transactions from multiple blocks', () => {
 
 describe('Gets a Bridge Transaction given a web3 transaction: web3TransactionObject and a bridgeTxReceipt: TransactionReceipt', () => {
 
-    let sandbox;
     let bridgeTransactionParser;
 
-    beforeEach((done) => {
+    beforeEach(() => {
         bridgeTransactionParser = new BridgeTransactionParser(web3ClientStub);
-        sandbox = sinon.createSandbox();
-        done();
-    });
-
-    afterEach((done) => {
-        sandbox.restore();
-        done();
     });
 
     it('Should fail when BridgeTx and BridgeTxReceipt have different transaction hashes', async () => {

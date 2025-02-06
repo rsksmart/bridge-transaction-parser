@@ -11,7 +11,7 @@ class BridgeTransactionParser {
             throw new Error(`web3Client is required`);
         }
         this.web3Client = web3Client;
-        this.bridge = Bridge.build(this.web3Client);
+        this.bridge = new web3Client.eth.Contract(Bridge.abi, Bridge.address);
         this.jsonInterfaceMap = this.bridge._jsonInterface.reduce((map, item) => {
             map[item.signature] = item;
             return map;
