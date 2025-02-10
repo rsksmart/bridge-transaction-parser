@@ -1,6 +1,6 @@
 {
   "name": "@rsksmart/bridge-transaction-parser",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A tool to find interactions with the Bridge on Rootstock",
   "main": "index.js",
   "scripts": {
