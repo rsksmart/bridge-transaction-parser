@@ -223,4 +223,4 @@ monitor.reset(newParams);
 ```
 ## Contributing
 
-Any comments or suggestions feel free to contribute or reach out at our [open slack](https://dev.rootstock.io//slack).
+Any comments or suggestions feel free to contribute or reach out at our [Discord server](https://discord.gg/rootstock).
