@@ -15,14 +15,15 @@
   },
   "homepage": "https://github.com/rsksmart/bridge-transaction-parser#readme",
   "dependencies": {
-    "@rsksmart/rsk-precompiled-abis": "git+https://github.com/rsksmart/precompiled-abis#7.0.0-LOVELL"
+    "@rsksmart/rsk-precompiled-abis": "^7.1.0-LOVELL",
+    "ethers": "^6.13.5"
   },
   "author": "",
   "license": "MIT",
   "keywords": [
 		"rootstock",
 		"rsk",
-		"web3",
+		"etherjs",
 		"blockchain",
     "bridge",
     "powpeg"
@@ -33,8 +34,7 @@
     "mocha": "^10.2.0",
     "nyc": "^15.1.0",
     "rewire": "^6.0.0",
-    "sinon": "^11.1.2",
-    "web3": "^1.5.3"
+    "sinon": "^11.1.2"
   },
   "types": "./index.d.ts"
 }
