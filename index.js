@@ -129,7 +129,7 @@ class BridgeTransactionParser {
                 args);
         }
         let bridgeTx = new BridgeTx(
-            txReceipt.transactionHash,
+            txReceipt.hash,
             bridgeMethod,
             events,
             txReceipt.from,

@@ -161,7 +161,7 @@ If `toBlock` param is provided and the monitor reaches that block number, then t
 const LiveMonitor = require('./tool/live-monitor');
 const ethers = require('ethers');
 
-const rskClient = new Web3('https://public-node.testnet.rsk.co/');
+const rskClient = new ethers.JsonRpcProvider('https://public-node.testnet.rsk.co/');
 
 const params = {
     fromBlock: 'latest',
