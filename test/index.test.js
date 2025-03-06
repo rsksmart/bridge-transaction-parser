@@ -1,6 +1,5 @@
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised');
-const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
 const BridgeTransactionParser = require('../index');
 const {txReceiptsStub, blocksStub} = require("./blockchain-stubs.util");
 const { rskClient } = require("./ethers-js-stub.util");
