@@ -1,12 +1,12 @@
-const Web3 = require('web3');
 const networkParser = require('./network-parser');
 const BridgeTransactionParser = require('../index');
+const {ethers} = require("ethers");
 
 (async () => {
     try {
         const network = process.argv[2];
-        const web3Client = new Web3(networkParser(network));
-        const bridgeTransactionParser = new BridgeTransactionParser(web3Client);
+        const rskClient = new ethers.JsonRpcProvider(networkParser(network));
+        const bridgeTransactionParser = new BridgeTransactionParser(rskClient);
         const startingBlock = process.argv[3];
         const blocksToSearch = process.argv[4]; // Input should be between 1 and 100
         

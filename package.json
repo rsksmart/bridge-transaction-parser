@@ -1,7 +1,7 @@
 {
   "name": "@rsksmart/bridge-transaction-parser",
-  "version": "1.2.1",
-  "description": "A tool to find interactions with the Bridge on Rootstock",
+  "version": "2.0.0",
+  "description": "A tool to find and decode transactions to the Rootstock Bridge",
   "main": "index.js",
   "scripts": {
     "test": "nyc mocha --timeout 10000"
@@ -15,26 +15,26 @@
   },
   "homepage": "https://github.com/rsksmart/bridge-transaction-parser#readme",
   "dependencies": {
-    "@rsksmart/rsk-precompiled-abis": "git+https://github.com/rsksmart/precompiled-abis#7.0.0-LOVELL"
+    "@rsksmart/rsk-precompiled-abis": "^7.1.0-LOVELL",
+    "ethers": "^6.13.5"
   },
   "author": "",
   "license": "MIT",
   "keywords": [
-		"rootstock",
-		"rsk",
-		"web3",
-		"blockchain",
+    "rootstock",
+    "rsk",
+    "etherjs",
+    "blockchain",
     "bridge",
     "powpeg"
-	],
+  ],
   "devDependencies": {
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
     "mocha": "^10.2.0",
     "nyc": "^15.1.0",
     "rewire": "^6.0.0",
-    "sinon": "^11.1.2",
-    "web3": "^1.5.3"
+    "sinon": "^11.1.2"
   },
   "types": "./index.d.ts"
 }

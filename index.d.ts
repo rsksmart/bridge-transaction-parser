@@ -1,5 +1,4 @@
-import Web3 from "web3";
-import { TransactionReceipt, Transaction as Web3Transaction } from "web3-core";
+import {JsonRpcProvider, TransactionReceipt, TransactionRequest} from "ethers";
 
 interface Transaction {
     txHash: string,
@@ -25,7 +24,7 @@ interface BridgeEvent {
 export interface Log {
     data: string;
     topics: string[];
-};
+}
 
 export interface AbiElement {
     type: string;
@@ -39,9 +38,9 @@ export default class BridgeTransactionParser {
 
     /**
      * 
-     * @param web3Client Web3 Instance
+     * @param rskClient JsonRpcProvider
      */
-    constructor(web3Client: Web3);
+    constructor(rskClient: JsonRpcProvider);
 
     /**
      * Gets Bridge Transactions In a Specified Block Hash Or Block Number
@@ -66,12 +65,12 @@ export default class BridgeTransactionParser {
     getBridgeTransactionByTxHash(transactionHash: string): Promise<Transaction>;
 
     /**
-     * Gets a Bridge Transaction given a web3 transaction: web3TransactionObject and a bridgeTxReceipt: TransactionReceipt.
-     * @param web3Tx The web3TransactionObject.
-     * @param bridgeTxReceipt The bridgeTxReceipt: web3TransactionReceiptObject.
+     * Gets a Bridge Transaction given a transaction request: TransactionRequest and a bridgeTxReceipt: TransactionReceipt.
+     * @param transactionRequest The transactionRequest.
+     * @param bridgeTxReceipt The bridgeTxReceipt: TransactionReceipt.
      * @returns Object - A transaction object
      */
-     decodeBridgeTransaction(web3Tx: Web3Transaction, bridgeTxReceipt: TransactionReceipt): Promise<Transaction>;
+     decodeBridgeTransaction(transactionRequest: TransactionRequest, bridgeTxReceipt: TransactionReceipt): Promise<Transaction>;
 
      /**
       * Decodes logs from a transaction receipt

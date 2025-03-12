@@ -7,7 +7,7 @@ const getParsedParams = () => {
     const params = process.argv.filter(param => param.startsWith('--'))
     .reduce((params, param) => {
         if(param.startsWith('--fromBlock')) {
-            params.fromBlock = param.slice(param.indexOf('=') + 1);
+            params.fromBlock = Number(param.slice(param.indexOf('=') + 1));
         } else if(param.startsWith('--methods') || param.startsWith('--events')) { // Parsing params that include an array
             const paramName = param.slice(2, param.indexOf('='));
             params[paramName] = JSON.parse(param.slice(param.indexOf('=') + 1).replaceAll("'", '"'));
