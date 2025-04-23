@@ -1,4 +1,6 @@
-# Declare default permissions as read only.
+name: 'Dependency Review'
+on: [pull_request]
+
 permissions: read-all
 
 jobs:
