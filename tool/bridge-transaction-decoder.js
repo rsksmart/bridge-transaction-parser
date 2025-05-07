@@ -9,7 +9,7 @@ const {ethers} = require("ethers");
     const bridgeTransactionParser = new BridgeTransactionParser(rskClient);
     const bridgeTx = JSON.parse(process.argv[3]);
     const bridgeTxReceipt = JSON.parse(process.argv[4]);
-    const transaction = await bridgeTransactionParser.decodeBridgeTransaction(bridgeTx, bridgeTxReceipt)
+    const transaction = await bridgeTransactionParser.decodeBridgeTransaction(bridgeTx, bridgeTxReceipt);
 
     if (transaction) {
       console.log(JSON.stringify(transaction, null, 2));

@@ -232,7 +232,7 @@ class LiveMonitor extends EventEmitter {
                     console.error(message, error);
                     this.isStarted = false;
                 }
-            }
+            };
     
             setup();
     
