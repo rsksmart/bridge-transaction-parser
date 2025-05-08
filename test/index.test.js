@@ -178,12 +178,11 @@ describe('Gets a Bridge Transaction given a transaction: TransactionRequest and 
           .to.be.rejectedWith(`Given bridgeTxReceipt is not a bridge transaction`);
     });
 
-    it('Should decode a bridge transaction from a bridgeTx and a bridgeTxReceipt' +
-      'into a Transaction object', async () => {
+    it('Should decode a bridge transaction from a bridgeTx and a bridgeTxReceipt into a Transaction object', async () => {
         const bridgeTx = await rskClient.getTransaction("0x73a4d1592c5e922c2c6820985982d2715538717e4b4b52502685bc4c924300b7");
         const bridgeTxReceipt = await rskClient.getTransactionReceipt("0x73a4d1592c5e922c2c6820985982d2715538717e4b4b52502685bc4c924300b7");
 
-        const transaction = await bridgeTransactionParser.decodeBridgeTransaction(bridgeTx, bridgeTxReceipt)
+        const transaction = await bridgeTransactionParser.decodeBridgeTransaction(bridgeTx, bridgeTxReceipt);
 
         assert.equal(transaction.txHash, bridgeTxReceipt.hash);
         assert.equal(transaction.blockNumber, bridgeTxReceipt.blockNumber);
