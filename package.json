@@ -15,7 +15,7 @@
   },
   "homepage": "https://github.com/rsksmart/bridge-transaction-parser#readme",
   "dependencies": {
-    "@rsksmart/rsk-precompiled-abis": "git+https://github.com/rsksmart/precompiled-abis#update-union-bridge-methods-and-events"
+    "@rsksmart/rsk-precompiled-abis": "git+https://github.com/rsksmart/precompiled-abis#master"
   },
   "author": "",
   "license": "MIT",

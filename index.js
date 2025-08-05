@@ -23,7 +23,8 @@ class BridgeTransactionParser {
     
         let transaction;
         const txReceipt = await this.web3Client.eth.getTransactionReceipt(transactionHash);
-        if (txReceipt?.to === Bridge.address) {
+        const unionBridgeAddress = await this.bridge.methods.getUnionBridgeContractAddress().call();
+        if (txReceipt?.to === Bridge.address || txReceipt?.to === unionBridgeAddress.toLowerCase()) {
             const tx = await this.web3Client.eth.getTransaction(txReceipt.transactionHash);
             transaction = await this.createBridgeTx(tx, txReceipt);
         }
