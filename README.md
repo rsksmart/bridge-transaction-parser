@@ -1,9 +1,10 @@
+[![Build and Test](https://github.com/rsksmart/bridge-transaction-parser/actions/workflows/build-test.yml/badge.svg)](https://github.com/rsksmart/bridge-transaction-parser/actions/workflows/build-test.yml)
+[![CodeQL](https://github.com/rsksmart/bridge-transaction-parser/workflows/CodeQL/badge.svg)](https://github.com/rsksmart/bridge-transaction-parser/actions?query=workflow%3ACodeQL)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/rsksmart/bridge-transaction-parser/badge)](https://scorecard.dev/viewer/?uri=github.com/rsksmart/bridge-transaction-parser)
+
 <img src="./rootstock_logo.png" alt="Rootstock" />
 
 # bridge-transaction-parser
-![Github CI/CD](https://github.com/rsksmart/bridge-transaction-parser/actions/workflows/workflow.yml/badge.svg)
-[![CodeQL](https://github.com/rsksmart/bridge-transaction-parser/workflows/CodeQL/badge.svg)](https://github.com/rsksmart/bridge-transaction-parser/actions?query=workflow%3ACodeQL)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/rsksmart/bridge-transaction-parser/badge)](https://scorecard.dev/viewer/?uri=github.com/rsksmart/bridge-transaction-parser)
 
 A tool to find interactions with the Bridge on Rootstock
 
