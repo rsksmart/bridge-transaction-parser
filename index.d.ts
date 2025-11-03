@@ -1,4 +1,4 @@
-import {JsonRpcProvider, TransactionReceipt, TransactionRequest} from "ethers";
+import {JsonRpcApiProvider, TransactionReceipt, TransactionRequest} from "ethers";
 
 interface Transaction {
     txHash: string,
@@ -38,9 +38,9 @@ export default class BridgeTransactionParser {
 
     /**
      * 
-     * @param rskClient JsonRpcProvider
+     * @param rskClient JsonRpcApiProvider
      */
-    constructor(rskClient: JsonRpcProvider);
+    constructor(rskClient: JsonRpcApiProvider);
 
     /**
      * Gets Bridge Transactions In a Specified Block Hash Or Block Number
