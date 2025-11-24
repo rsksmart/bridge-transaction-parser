@@ -33,7 +33,7 @@
     "chai-as-promised": "^7.1.1",
     "mocha": "^11.7.4",
     "nyc": "^17.1.0",
-    "rewire": "^6.0.0",
+    "rewire": "^9.0.1",
     "sinon": "^21.0.0"
   },
   "types": "./index.d.ts"
