@@ -156,6 +156,10 @@ If `toBlock` param is not provided, then the tool will continue to synch with ne
 
 If `toBlock` param is provided and the monitor reaches that block number, then the monitor will emit the `toBlockReached` event and stop.
 
+Sometimes the tool shows to many `Last block checked` logs in the console, to delay this, you can use the `--showProgressEveryMilliseconds=<time_in_milliseconds>` param while using the `cli` tool and assign an integer value in milliseconds, so that it only shows the progress every certain milliseconds. Defaults to `60000` (1 minute).
+
+Most `updateCollections` calls don't emit interesting events. We can skip these by using the `--shouldPrintUpdateCollectionsWithLessThan2Events=<boolean>` param in the `cli` tool. Defaults to `false`.
+
 ### Samples with the exported `monitor` function
 
 ```js
