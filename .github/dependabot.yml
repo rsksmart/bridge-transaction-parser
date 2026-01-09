@@ -51,7 +51,7 @@ updates:
       - "npm"
     # one PR per week that groups BOTH minor + patch updates
     groups:
-      actions-updates:
+      npm-updates:
         applies-to: version-updates
         patterns:
           - "*"
