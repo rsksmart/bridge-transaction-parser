@@ -43,6 +43,12 @@ describe('Get Bridge transaction by tx hash', () => {
         await expect(bridgeTransactionParser.getBridgeTransactionByTxHash(txReceipt.hash)).to.be.empty;
     });
 
+    it('Should return empty when transaction receipt is not found', async () => {
+        const transactionHash = '0x0000000000000000000000000000000000000000000000000000000000000001';
+
+        await expect(bridgeTransactionParser.getBridgeTransactionByTxHash(transactionHash)).to.be.empty;
+    });
+
     it('Should verify and return Bridge transaction from tx hash', async () => {
         const txReceipt = txReceiptsStub[4];
         const block = await rskClient.getBlock(txReceipt.blockNumber);
