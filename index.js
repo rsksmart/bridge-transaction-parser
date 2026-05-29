@@ -22,7 +22,11 @@ class BridgeTransactionParser {
         let transaction;
         const txReceipt = await this.rskClient.getTransactionReceipt(
             transactionHash);
-        if (txReceipt?.to === Bridge.address) {
+        if (!txReceipt) {
+            console.warn(`Transaction receipt not found for hash ${transactionHash}`);
+            return transaction;
+        }
+        if (txReceipt.to === Bridge.address) {
             const tx = await this.rskClient.getTransaction(
                 txReceipt.hash);
             transaction = await this.createBridgeTx(tx, txReceipt);

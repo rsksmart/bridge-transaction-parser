@@ -60,9 +60,9 @@ export default class BridgeTransactionParser {
     /**
      * Gets a Single Bridge Transaction Via The Transaction Hash.
      * @param transactionHash The transaction hash.
-     * @returns Object - A transaction object
+     * @returns Object - A transaction object, or undefined if the transaction receipt is not found or the transaction is not a Bridge transaction
      */
-    getBridgeTransactionByTxHash(transactionHash: string): Promise<Transaction>;
+    getBridgeTransactionByTxHash(transactionHash: string): Promise<Transaction | undefined>;
 
     /**
      * Gets a Bridge Transaction given a transaction request: TransactionRequest and a bridgeTxReceipt: TransactionReceipt.
