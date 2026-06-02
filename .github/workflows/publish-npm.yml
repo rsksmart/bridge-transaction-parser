@@ -2,7 +2,7 @@ name: Deploy packages on NPM
 
 on:
   release:
-    types: [created, edited, published]
+    types: [published]
 
 # Declare default permissions as read only.
 permissions: read-all
@@ -57,7 +57,7 @@ jobs:
 
       - name: Check if package version matches with tag
         if: github.ref != steps.get_package_info.outputs.PACKAGE_VERSION
-        # Fail if package version not properly setted
+        # Fail if package version not properly set
         run: |
           echo "ERROR: Package version '${{ steps.get_package_info.outputs.PACKAGE_VERSION }}' does not match GitHub tag '${{ github.ref }}'"
           exit 1
@@ -72,7 +72,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 22
+          node-version: 24
           cache: 'npm'
           registry-url: https://registry.npmjs.org
 
@@ -81,8 +81,8 @@ jobs:
           rm -rf dist
           npm ci
 
-      - name: Update npm
-        run: npm install -g npm@latest
+      - name: Install npm
+        run: npm install -g npm@11.11.0
 
       - name: Run tests
         run: npm test
@@ -102,7 +102,7 @@ jobs:
 
           if npm view $PACKAGE_NAME@$PACKAGE_VERSION > /dev/null 2>&1; then
             echo "Version $PACKAGE_VERSION of $PACKAGE_NAME is already published."
-            exit 0
+            exit 1
           fi
 
           echo "Version $PACKAGE_VERSION of $PACKAGE_NAME is not published. Proceeding with publishing..."
@@ -138,4 +138,3 @@ jobs:
             exit 1
           fi
           echo "Hashes match successfully!"
-
