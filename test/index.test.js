@@ -1,11 +1,8 @@
-const chai = require('chai')
-const chaiAsPromised = require('chai-as-promised');
+const chai = require('chai');
 const BridgeTransactionParser = require('../index');
 const {txReceiptsStub, blocksStub} = require("./blockchain-stubs.util");
 const { rskClient } = require("./ethers-js-stub.util");
-const assert = chai.assert;
-chai.use(chaiAsPromised);
-const {expect} = chai;
+const { assert, expect } = chai;
 
 describe('Constructor', () => {
 
