@@ -16,7 +16,7 @@
   "homepage": "https://github.com/rsksmart/bridge-transaction-parser#readme",
   "dependencies": {
     "@rsksmart/rsk-precompiled-abis": "9.0.0-VETIVER",
-    "ethers": "6.16.0"
+    "ethers": "6.17.0"
   },
   "author": "",
   "license": "MIT",
