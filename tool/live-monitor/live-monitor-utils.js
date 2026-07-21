@@ -9,6 +9,7 @@ const MONITOR_EVENTS = {
     started: 'started',
     reset: 'reset',
     toBlockReached: 'toBlockReached',
+    newLatestBlock: 'newLatestBlock',
 };
 
 const defaultParamsValues = {
@@ -22,6 +23,8 @@ const defaultParamsValues = {
     retryOnError: true,
     retryOnErrorAttempts: 3,
     toBlock: -1,
+    showProgressEveryMilliseconds: 60000,
+    shouldPrintUpdateCollectionsWithLessThan2Events: false,
 };
 
 module.exports = {

@@ -41,6 +41,7 @@ class LiveMonitor extends EventEmitter {
         this.latestBlockNumber = null;
         this.isStarted = false;
         this.toBlock = params.toBlock;
+        this.lastLatestBlockNumber = null;
 
         if(params.network) {
             this.rskClient = new ethers.JsonRpcProvider(params.network);
@@ -59,6 +60,12 @@ class LiveMonitor extends EventEmitter {
             attempts++;
             
             this.latestBlockNumber = (await this.rskClient.getBlock('latest')).number;
+
+            if(this.latestBlockNumber !== this.lastLatestBlockNumber) {
+                this.emit(MONITOR_EVENTS.newLatestBlock, this.latestBlockNumber);
+            }
+
+            this.lastLatestBlockNumber = this.latestBlockNumber;
 
             if(this.latestBlockNumber < this.currentBlockNumber) {
                 if(!this.notified) {
@@ -201,7 +208,8 @@ class LiveMonitor extends EventEmitter {
                 try {
                     this.latestBlockNumber = (await this.rskClient.getBlock(
                         'latest')).number;
-    
+                    this.lastLatestBlockNumber = this.latestBlockNumber;
+                    this.emit(MONITOR_EVENTS.newLatestBlock, this.latestBlockNumber);
                     if(this.currentBlockNumber === 'latest') {
                         this.currentBlockNumber = this.latestBlockNumber;
                     } else {
