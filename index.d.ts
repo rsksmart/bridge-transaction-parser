@@ -55,7 +55,7 @@ export default class BridgeTransactionParser {
      * @param blocksToSearch Number/Amount of blocks to search
      * @returns Array - Array of transaction objects
      */
-    getBridgeTransactionsSinceThisBlock(startingBlockHashOrBlockNumber: string | number, blocksToSearch: string): Promise<Array<Transaction>>;
+    getBridgeTransactionsSinceThisBlock(startingBlockHashOrBlockNumber: string | number, blocksToSearch: number): Promise<Array<Transaction>>;
 
     /**
      * Gets a Single Bridge Transaction Via The Transaction Hash.
