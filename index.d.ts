@@ -34,6 +34,27 @@ export interface AbiElement {
     signature: string;
 }
 
+/**
+ * Thrown when a payload is not a canonical ABI encoding of the parameters it
+ * claims to carry — aliased, overlapping, misaligned or out-of-bounds dynamic
+ * offsets, or a declared length that does not fit. Raised before any decoding
+ * happens, so the payload costs one pass over its offset words.
+ */
+export declare class NonCanonicalCalldataError extends Error {
+    readonly name: 'NonCanonicalCalldataError';
+    readonly code: 'NON_CANONICAL_CALLDATA';
+    readonly info?: unknown;
+}
+
+/**
+ * Thrown when the Bridge ABI contains a construct the calldata guard cannot
+ * walk. Depends only on the packaged ABI, never on the payload.
+ */
+export declare class UnsupportedAbiTypeError extends Error {
+    readonly name: 'UnsupportedAbiTypeError';
+    readonly code: 'UNSUPPORTED_ABI_TYPE';
+}
+
 export default class BridgeTransactionParser {
 
     /**
@@ -61,6 +82,7 @@ export default class BridgeTransactionParser {
      * Gets a Single Bridge Transaction Via The Transaction Hash.
      * @param transactionHash The transaction hash.
      * @returns Object - A transaction object, or undefined if the transaction receipt is not found or the transaction is not a Bridge transaction
+     * @throws NonCanonicalCalldataError if the transaction's calldata is not a canonical ABI encoding
      */
     getBridgeTransactionByTxHash(transactionHash: string): Promise<Transaction | undefined>;
 

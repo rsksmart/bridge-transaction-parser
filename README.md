@@ -223,6 +223,43 @@ const newParams = {
 monitor.reset(newParams);
 
 ```
+## Non-canonical calldata is refused
+
+Before decoding, the parser checks that a transaction's calldata is a canonical
+ABI encoding of the method it names: dynamic offsets must be word-aligned, in
+bounds, and must not point back into a head area or overlap a previous region.
+The same check runs over event data.
+
+Calldata is untrusted input: it is whatever the sender put in the transaction,
+and a transaction does not have to succeed on-chain to be readable. Validating
+its layout before decoding follows the usual practice of rejecting malformed
+input at the boundary rather than letting a decoder act on it — an ABI decoder
+that follows each dynamic offset independently will materialize the same region
+once per offset, so a modest payload can expand far beyond its own size and
+exhaust the heap. That failure happens inside native code, where no
+`try`/`catch` in your application can contain it. Checking the offset words
+first costs microseconds.
+
+A refusal throws `NonCanonicalCalldataError` (stable `code:
+'NON_CANONICAL_CALLDATA'`), so the promise returned by
+`getBridgeTransactionByTxHash` / `decodeBridgeTransaction` rejects, and
+`decodeLog` throws synchronously. No conformant encoder produces a layout this
+rejects.
+
+If you index blocks, catch it rather than letting it stop the scan. The
+pegin/pegout facts you need travel in the events, which are decoded independently
+of the calldata:
+
+```js
+try {
+    bridgeTx = await parser.getBridgeTransactionByTxHash(txHash);
+} catch (error) {
+    if (error.code !== 'NON_CANONICAL_CALLDATA') throw error;
+    // Record the transaction without its decoded arguments and move on.
+    logger.warn({txHash}, 'non-canonical Bridge calldata, skipping the method decode');
+}
+```
+
 ## Contributing
 
 Any comments or suggestions feel free to contribute or reach out at our [Discord server](https://discord.gg/rootstock).
