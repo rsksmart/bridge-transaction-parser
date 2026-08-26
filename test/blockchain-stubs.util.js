@@ -227,9 +227,94 @@ const dataDecodedResults = [
     }
 ];
 
+// --- Non-canonical calldata fixtures -----------------------------------------
+// Built here instead of pasted as literals: the aliased payload is 262 KB of hex,
+// and building it keeps the shape of the layout readable. Nothing about
+// *constructing* these is expensive — only decoding them is.
+const {ethers} = require('ethers');
+const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
+
+const bridgeInterface = new ethers.Interface(Bridge.abi);
+const word = value => BigInt(value).toString(16).padStart(64, '0');
+
+const ALIASED_ENTRIES = 2040;
+const ALIASED_SHARED_BYTES = 64 * 1024;
+
+// 2,040 `bytes[]` head offsets all pointing at the same 64 KiB element. Every
+// referenced byte is present and in bounds, so this is not a malformed-length
+// rejection: a decoder that follows each offset independently copies and
+// hexifies the shared element once per alias, ~134 MB from ~131 KB of calldata.
+const ALIASED_RECEIVE_HEADERS_DATA = '0x'
+    + bridgeInterface.getFunction('receiveHeaders').selector.slice(2)
+    + word(32)
+    + word(ALIASED_ENTRIES)
+    + word(32 * ALIASED_ENTRIES).repeat(ALIASED_ENTRIES)
+    + word(ALIASED_SHARED_BYTES)
+    + '41'.repeat(ALIASED_SHARED_BYTES);
+
+// The same amplification with strictly increasing offsets: each one lands on a
+// different large length word, and the windows they open overlap. Kept as a
+// fixture so nobody weakens the guard to a monotonicity check.
+const SLIDING_RECEIVE_HEADERS_DATA = (() => {
+    const entries = 1200;
+    const declaredLength = 60000;
+    let data = bridgeInterface.getFunction('receiveHeaders').selector.slice(2)
+        + word(32) + word(entries);
+    for (let i = 0; i < entries; i++) {
+        data += word(32 + entries * 32 + 32 * i);
+    }
+    return '0x' + data + word(declaredLength).repeat(entries) + '42'.repeat(declaredLength);
+})();
+
+// A canonical multi-element `bytes[]`: three 80-byte Bitcoin headers. The
+// existing fixtures only exercise a single-element array, so this is the vector
+// that catches an over-strict guard.
+const CANONICAL_HEADERS = [
+    '0x' + '11'.repeat(80),
+    '0x' + '22'.repeat(80),
+    '0x' + '33'.repeat(80),
+];
+const CANONICAL_RECEIVE_HEADERS_DATA = bridgeInterface.encodeFunctionData(
+    'receiveHeaders', [CANONICAL_HEADERS]);
+
+const ALIASED_TX_HASH = '0x' + 'a11a5ed'.padEnd(64, '1');
+const CANONICAL_HEADERS_TX_HASH = '0x' + 'ca0'.padEnd(64, '2');
+const FIXTURE_SENDER = '0x2cca2fd0357ea3d37dbf22aa1926073b0aef470e';
+const FIXTURE_BLOCK_NUMBER = 1003;
+
+txReceiptsStub.push(
+    {
+        hash: ALIASED_TX_HASH,
+        blockNumber: FIXTURE_BLOCK_NUMBER,
+        logs: [],
+        from: FIXTURE_SENDER,
+        to: Bridge.address
+    },
+    {
+        hash: CANONICAL_HEADERS_TX_HASH,
+        blockNumber: FIXTURE_BLOCK_NUMBER,
+        logs: [],
+        from: FIXTURE_SENDER,
+        to: Bridge.address
+    }
+);
+
+transactionsStub.push(
+    {hash: ALIASED_TX_HASH, data: ALIASED_RECEIVE_HEADERS_DATA},
+    {hash: CANONICAL_HEADERS_TX_HASH, data: CANONICAL_RECEIVE_HEADERS_DATA}
+);
+
 module.exports = {
     txReceiptsStub,
     transactionsStub,
     blocksStub,
-    dataDecodedResults
+    dataDecodedResults,
+    ALIASED_RECEIVE_HEADERS_DATA,
+    SLIDING_RECEIVE_HEADERS_DATA,
+    CANONICAL_RECEIVE_HEADERS_DATA,
+    CANONICAL_HEADERS,
+    ALIASED_TX_HASH,
+    CANONICAL_HEADERS_TX_HASH,
+    FIXTURE_SENDER,
+    FIXTURE_BLOCK_NUMBER
 }

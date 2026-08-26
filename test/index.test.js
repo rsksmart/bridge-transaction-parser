@@ -1,6 +1,16 @@
 const chai = require('chai');
 const BridgeTransactionParser = require('../index');
-const {txReceiptsStub, blocksStub} = require("./blockchain-stubs.util");
+const {
+    txReceiptsStub,
+    blocksStub,
+    transactionsStub,
+    CANONICAL_HEADERS,
+    ALIASED_TX_HASH,
+    CANONICAL_HEADERS_TX_HASH,
+    FIXTURE_SENDER,
+    FIXTURE_BLOCK_NUMBER
+} = require("./blockchain-stubs.util");
+const {NonCanonicalCalldataError} = require('../calldata-guard');
 const { rskClient } = require("./ethers-js-stub.util");
 const { assert, expect } = chai;
 
@@ -215,3 +225,55 @@ describe('Gets a Bridge Transaction given a transaction: TransactionRequest and 
         assert.equal(transaction.events[3].arguments.releaseRskTxHashes, "0xdde4dd54901569f5e0ca993f7158c676e02e61a550af73c5e83a95fcefde4671");
     });
 })
+
+describe('Non-canonical Bridge calldata', () => {
+
+    let bridgeTransactionParser;
+
+    beforeEach(() => {
+        bridgeTransactionParser = new BridgeTransactionParser(rskClient);
+    });
+
+    it('Should reject a transaction whose bytes[] offsets all alias one element', async () => {
+        // Untrusted input has to fail as an ordinary, catchable error. A decoder
+        // that follows each offset independently would instead expand this payload
+        // by orders of magnitude and abort inside native code, where no catch can
+        // reach it.
+        await expect(bridgeTransactionParser.getBridgeTransactionByTxHash(ALIASED_TX_HASH))
+            .to.be.rejectedWith(NonCanonicalCalldataError, /overlapping or backwards tail/);
+
+        // Availability is the property under test: rejecting one payload must not
+        // stop the parser from serving the next request.
+        const next = await bridgeTransactionParser.getBridgeTransactionByTxHash(
+            CANONICAL_HEADERS_TX_HASH);
+        assert.equal(next.method.name, 'receiveHeaders');
+    });
+
+    it('Should reject the same calldata through decodeBridgeTransaction', async () => {
+        const txReceipt = txReceiptsStub.find(receipt => receipt.hash === ALIASED_TX_HASH);
+        const tx = transactionsStub.find(transaction => transaction.hash === ALIASED_TX_HASH);
+
+        await expect(bridgeTransactionParser.decodeBridgeTransaction(tx, txReceipt))
+            .to.be.rejectedWith(NonCanonicalCalldataError);
+    });
+
+    it('Should still decode a canonical multi-element bytes[]', async () => {
+        // The false-positive guard rail: the other fixtures only carry a
+        // single-element bytes[], so without this a rule that rejected every
+        // multi-element array would look green.
+        const block = await rskClient.getBlock(FIXTURE_BLOCK_NUMBER);
+        const result = await bridgeTransactionParser.getBridgeTransactionByTxHash(
+            CANONICAL_HEADERS_TX_HASH);
+
+        assert.equal(result.txHash, CANONICAL_HEADERS_TX_HASH);
+        assert.equal(result.sender, FIXTURE_SENDER);
+        assert.equal(result.blockNumber, FIXTURE_BLOCK_NUMBER);
+        assert.equal(result.blockTimestamp, block.timestamp);
+        assert.equal(result.method.name, 'receiveHeaders');
+        assert.equal(result.method.signature, '0xe5400e7b');
+        assert.lengthOf(result.method.arguments.blocks, CANONICAL_HEADERS.length);
+        assert.deepEqual([...result.method.arguments.blocks], CANONICAL_HEADERS);
+        assert.isEmpty(result.events);
+    });
+
+});

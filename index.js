@@ -5,6 +5,12 @@ const BridgeEvent = require("./BridgeEvent");
 const utils = require("./utils");
 const {ethers} = require('ethers');
 const {formatBigIntForJson} = require("./utils");
+const {
+    assertCanonicalCalldata,
+    assertCanonicalAbiRegion,
+    NonCanonicalCalldataError,
+    UnsupportedAbiTypeError,
+} = require("./calldata-guard");
 
 class BridgeTransactionParser {
 
@@ -107,12 +113,24 @@ class BridgeTransactionParser {
         }
 
         const functionFragment = this.bridge.interface.getFunction(methodName);
+
+        // Validate untrusted input before handing it to a decoder. Calldata comes
+        // from whoever sent the transaction, and aliased or overlapping dynamic
+        // offsets make a decoder materialize the same region once per offset, so a
+        // small payload can expand into an out-of-memory abort that happens inside
+        // native code where no try/catch can reach it. The guard reads only offset
+        // words, so validation costs one pass and a rejection stays catchable.
+        assertCanonicalCalldata(functionFragment, data);
+
         const dataDecoded = this.bridge.interface.decodeFunctionData(functionFragment,
             data);
 
         // TODO: the parsing of the arguments is not tested
+        // Inputs come from the resolved fragment, not from the ABI entry found by
+        // name above: that lookup matches events too, and only happens to work
+        // today because no Bridge event shares a name with a function.
         const args = {};
-        for (let input of abi.inputs) {
+        for (let input of functionFragment.inputs) {
             args[input.name] = dataDecoded[input.name];
         }
         return args;
@@ -164,6 +182,24 @@ class BridgeTransactionParser {
     }
 
     decodeLog = (log, abiElement) => {
+        // Same guard for event data. Lower stakes than calldata — logs are emitted
+        // by the contract, and no Bridge event carries an array — but decodeLog is
+        // public API that a consumer can hand untrusted logs to.
+        //
+        // Three details: the fragment is resolved from the log's own topic rather
+        // than the caller-supplied element, so the guard describes the bytes the
+        // decoder will read; indexed parameters arrive through the topics as
+        // bytes32 and are absent from the data layout, so counting them would
+        // misread every offset; and event data is decoded loosely by design, so a
+        // final unpadded word must not be rejected.
+        const eventFragment = this.bridge.interface.getEvent(log.topics[0]);
+        if (eventFragment) {
+            assertCanonicalAbiRegion(
+                eventFragment.inputs.filter(input => !input.indexed),
+                log.data,
+                {base: 0, requireWordMultiple: false, fragment: eventFragment});
+        }
+
         const parsedLog = this.bridge.interface.parseLog(log);
 
         const args = {};
@@ -177,3 +213,5 @@ class BridgeTransactionParser {
 }
 
 module.exports = BridgeTransactionParser;
+module.exports.NonCanonicalCalldataError = NonCanonicalCalldataError;
+module.exports.UnsupportedAbiTypeError = UnsupportedAbiTypeError;
