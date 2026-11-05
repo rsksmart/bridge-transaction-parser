@@ -212,3 +212,39 @@ describe('Gets a Bridge Transaction given a transaction: TransactionRequest and 
         assert.equal(transaction.events[3].arguments.releaseRskTxHashes, "0xdde4dd54901569f5e0ca993f7158c676e02e61a550af73c5e83a95fcefde4671");
     });
 })
+
+describe('Bridge Transaction Parser works with registerPegoutTransaction', () => {
+it('Should decode registerPegoutTransaction with utxos_registered and flyover_utxos_registered events', async () => {
+        const btcTxHash = "0x1f789f91cb5cb6f76b63ea7c9f5b6f3e2c6b0b3c1a5f1c0d3c3c1e4f0c2b7a91";
+        const federationBtcAddress = "2N5muMepJizJE1gR7FbHJU6CD18V3BpNF9p";
+        const txReceipt = txReceiptsStub.find(r => r.blockNumber === 1007);
+
+        const result = await bridgeTransactionParser.getBridgeTransactionByTxHash(txReceipt.hash);
+
+        assert.equal(result.txHash, txReceipt.hash);
+        assert.equal(result.blockNumber, 1007);
+
+        assert.equal(result.method.name, "registerPegoutTransaction");
+        assert.equal(result.method.signature, "0x0659b289");
+        assert.equal(result.method.arguments.btcTxHash, btcTxHash);
+        assert.equal(result.method.arguments.height, "4900123");
+        assert.equal(result.method.arguments.pmt, "0x03000000014f2c");
+
+        assert.lengthOf(result.events, 2);
+
+        assert.equal(result.events[0].name, "utxos_registered");
+        assert.equal(result.events[0].signature, "0x40f138c58f8f169ae233157af32d9cdc98f3a8cd01ceec7a73e6f0d6595faeb2");
+        assert.equal(result.events[0].arguments.btcTxHash, btcTxHash);
+        assert.equal(result.events[0].arguments.outputValues, "0x80969800");
+        assert.equal(result.events[0].arguments.outputIndexes, "0x01");
+        assert.equal(result.events[0].arguments.federationBtcAddress, federationBtcAddress);
+
+        assert.equal(result.events[1].name, "flyover_utxos_registered");
+        assert.equal(result.events[1].signature, "0xc6f7277a987c9b19fe10535b804eeee9da1cba3eb7944ea6714b371c62e3f023");
+        assert.equal(result.events[1].arguments.btcTxHash, btcTxHash);
+        assert.equal(result.events[1].arguments.outputValues, "0x40420f00");
+        assert.equal(result.events[1].arguments.outputIndexes, "0x02");
+        assert.equal(result.events[1].arguments.federationBtcAddress, federationBtcAddress);
+        assert.equal(result.events[1].arguments.flyoverDerivationHash, "0x4c3d8b2a1e6f7c9d0b5a4e3f2d1c0b9a8f7e6d5c4b3a29180f1e2d3c4b5a6978");
+    });
+});
