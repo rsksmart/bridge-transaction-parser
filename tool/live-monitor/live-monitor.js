@@ -8,7 +8,8 @@ const networkParser = require("../network-parser");
 const PEGOUT_METHOD_SIGNATURES = {
     releaseBtc: '0x',
     updateCollections: '0x0c5a9990',
-    addSignature: '0xf10b9c59'
+    addSignature: '0xf10b9c59',
+    registerPegoutTransaction: '0x0659b289'
 };
 
 const PEGIN_METHOD_SIGNATURES = {
