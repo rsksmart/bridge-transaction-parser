@@ -1,6 +1,6 @@
 {
   "name": "@rsksmart/bridge-transaction-parser",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "A tool to find and decode transactions to the Rootstock Bridge",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,7 @@
   },
   "homepage": "https://github.com/rsksmart/bridge-transaction-parser#readme",
   "dependencies": {
-    "@rsksmart/rsk-precompiled-abis": "9.0.0-VETIVER",
+    "@rsksmart/rsk-precompiled-abis": "github:rsksmart/rsk-precompiled-abis#master",
     "ethers": "6.17.0"
   },
   "author": "",
