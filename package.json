@@ -15,7 +15,7 @@
   },
   "homepage": "https://github.com/rsksmart/bridge-transaction-parser#readme",
   "dependencies": {
-    "@rsksmart/rsk-precompiled-abis": "github:rsksmart/rsk-precompiled-abis#1ec006db9638979423f1c2a4c82609ba01ae37f7",
+    "@rsksmart/rsk-precompiled-abis": "github:rsksmart/rsk-precompiled-abis#master",
     "ethers": "6.17.0"
   },
   "author": "",
