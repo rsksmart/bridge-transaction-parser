@@ -20,15 +20,15 @@ class BridgeTransactionParser {
         utils.verifyHashOrBlockNumber(transactionHash);
 
         let transaction;
-        const txReceipt = await this.rskClient.getTransactionReceipt(
-            transactionHash);
+        const txReceipt = await utils.withRetry(
+            () => this.rskClient.getTransactionReceipt(transactionHash));
         if (!txReceipt) {
             console.warn(`Transaction receipt not found for hash ${transactionHash}`);
             return transaction;
         }
         if (txReceipt.to === Bridge.address) {
-            const tx = await this.rskClient.getTransaction(
-                txReceipt.hash);
+            const tx = await utils.withRetry(
+                () => this.rskClient.getTransaction(txReceipt.hash));
             transaction = await this.createBridgeTx(tx, txReceipt);
         }
 
@@ -40,7 +40,7 @@ class BridgeTransactionParser {
 
         // block in number should be parsed as a Number in order to call the getBlock method
         const blockTag = this.#parseBlockTag(blockHashOrBlockNumber);
-        const block = await this.rskClient.getBlock(blockTag);
+        const block = await utils.withRetry(() => this.rskClient.getBlock(blockTag));
         if (!block) {
             throw new Error(`Block ${blockHashOrBlockNumber} not found`);
         }
@@ -71,8 +71,8 @@ class BridgeTransactionParser {
         }
 
         const startingBlockTag = this.#parseBlockTag(startingBlockHashOrBlockNumber);
-        const startingBlock = await this.rskClient.getBlock(
-            startingBlockTag);
+        const startingBlock = await utils.withRetry(
+            () => this.rskClient.getBlock(startingBlockTag));
         const startingBlockNumber = startingBlock.number;
 
         const bridgeTxs = [];
@@ -123,7 +123,8 @@ class BridgeTransactionParser {
         const functionSignature = txData.substring(0, 10);
         const method = this.bridge.interface.getFunction(functionSignature);
         const events = this.decodeLogs(txReceipt);
-        const block = await this.rskClient.getBlock(txReceipt.blockNumber);
+        const block = await utils.withRetry(
+            () => this.rskClient.getBlock(txReceipt.blockNumber));
 
         let bridgeMethod = '';
         if (method) {

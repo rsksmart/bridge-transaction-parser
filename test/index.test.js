@@ -156,6 +156,33 @@ describe('Get Bridge transactions from multiple blocks', () => {
         assert.equal(result[1].txHash, blocksStub[0].transactions[3]);
         assert.equal(result[2].txHash, blocksStub[2].transactions[0]);
     });
+
+    it('Should retry RPC calls that time out and return Bridge transactions from blocks', async () => {
+        const timeoutOnFirstCall = method => {
+            let called = false;
+            return async (...args) => {
+                if (!called) {
+                    called = true;
+                    throw Object.assign(new Error('request timeout'), {code: 'TIMEOUT'});
+                }
+                return method(...args);
+            };
+        };
+        const flakyRskClient = {
+            ...rskClient,
+            getBlock: timeoutOnFirstCall(rskClient.getBlock),
+            getTransactionReceipt: timeoutOnFirstCall(rskClient.getTransactionReceipt),
+            getTransaction: timeoutOnFirstCall(rskClient.getTransaction)
+        };
+        const flakyParser = new BridgeTransactionParser(flakyRskClient);
+
+        const result = await flakyParser.getBridgeTransactionsSinceThisBlock(1001, 3);
+
+        assert.lengthOf(result, 3);
+        assert.equal(result[0].txHash, blocksStub[0].transactions[0]);
+        assert.equal(result[1].txHash, blocksStub[0].transactions[3]);
+        assert.equal(result[2].txHash, blocksStub[2].transactions[0]);
+    });
 });
 
 describe('Gets a Bridge Transaction given a transaction: TransactionRequest and a bridgeTxReceipt: TransactionReceipt', () => {

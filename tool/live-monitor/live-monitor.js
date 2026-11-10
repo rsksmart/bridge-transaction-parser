@@ -2,7 +2,7 @@ const BridgeTransactionParser = require('../../index');
 const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
 const EventEmitter = require('node:events');
 const { MONITOR_EVENTS, defaultParamsValues } = require('./live-monitor-utils');
-const { ethers } = require("ethers");
+const createRskClient = require("../create-rsk-client");
 const networkParser = require("../network-parser");
 
 const PEGOUT_METHOD_SIGNATURES = {
@@ -44,7 +44,7 @@ class LiveMonitor extends EventEmitter {
         this.toBlock = params.toBlock;
 
         if(params.network) {
-            this.rskClient = new ethers.JsonRpcProvider(params.network);
+            this.rskClient = createRskClient(params.network);
             this.bridgeTransactionParser = new BridgeTransactionParser(this.rskClient);
         }
     }
@@ -173,7 +173,7 @@ class LiveMonitor extends EventEmitter {
             }
             
             if(params && params.network) {
-                this.rskClient = new ethers.JsonRpcProvider(networkParser(params.network));
+                this.rskClient = createRskClient(networkParser(params.network));
             }
 
             if(!params.events) {
@@ -282,7 +282,7 @@ class LiveMonitor extends EventEmitter {
 
     setNetwork(network) {
         this.params.network = network;
-        this.rskClient = new ethers.JsonRpcProvider(network);
+        this.rskClient = createRskClient(network);
         this.bridgeTransactionParser = new BridgeTransactionParser(this.rskClient);
         return this;
     }
