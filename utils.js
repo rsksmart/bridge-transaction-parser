@@ -32,7 +32,35 @@ const formatBigIntForJson = obj => {
     return obj;
 };
 
+// Errors that point to a dropped or stuck connection, not to a bad request.
+const RETRYABLE_ERROR_CODES = new Set([
+    'TIMEOUT',
+    'NETWORK_ERROR',
+    'ECONNRESET',
+    'ECONNREFUSED',
+    'ETIMEDOUT',
+    'EPIPE'
+]);
+
+const isRetryableError = error => RETRYABLE_ERROR_CODES.has(error?.code);
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const withRetry = async (operation, {retries = 3, baseDelayMs = 500} = {}) => {
+    for (let attempt = 0; ; attempt++) {
+        try {
+            return await operation();
+        } catch (error) {
+            if (!isRetryableError(error) || attempt >= retries) {
+                throw error;
+            }
+            await sleep(baseDelayMs * 2 ** attempt);
+        }
+    }
+};
+
 module.exports = {
     verifyHashOrBlockNumber,
-    formatBigIntForJson
+    formatBigIntForJson,
+    withRetry
 };

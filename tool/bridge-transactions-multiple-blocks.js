@@ -1,11 +1,11 @@
 const networkParser = require('./network-parser');
 const BridgeTransactionParser = require('../index');
-const {ethers} = require("ethers");
+const createRskClient = require("./create-rsk-client");
 
 (async () => {
     try {
         const network = process.argv[2];
-        const rskClient = new ethers.JsonRpcProvider(networkParser(network));
+        const rskClient = createRskClient(networkParser(network));
         const bridgeTransactionParser = new BridgeTransactionParser(rskClient);
         const startingBlock = process.argv[3];
         const blocksToSearch = process.argv[4]; // Input should be between 1 and 100
